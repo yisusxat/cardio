@@ -1,0 +1,22 @@
+# Global
+node_modules/
+.env
+.env.local
+.env.production
+.DS_Store
+*.log
+dist/
+build/
+coverage/
+
+# Backend
+backend/prisma/migrations/migration_lock.toml
+backend/dist/
+
+# Frontend
+frontend/.vite/
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: cardio_db
+    environment:
+      POSTGRES_DB: cardiology_db
+      POSTGRES_USER: cardiology_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-cardiology_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardiology_user -d cardiology_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

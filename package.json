@@ -1,0 +1,28 @@
+{
+  "name": "cardiocenter",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de citas médicas para cardiología",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.7"
+  },
+  "lint-staged": {
+    "backend/**/*.{ts,tsx}": [
+      "cd backend && npm run lint"
+    ],
+    "frontend/**/*.{ts,tsx}": [
+      "cd frontend && npm run lint"
+    ]
+  }
+}
