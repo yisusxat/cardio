@@ -16,6 +16,7 @@ __pycache__/
 
 # Global
 node_modules/
+!node_modules/.prisma/
 .env
 .env.local
 .env.production
