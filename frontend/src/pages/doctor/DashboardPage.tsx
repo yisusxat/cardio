@@ -153,17 +153,106 @@ export default function DoctorDashboardPage() {
     <PageLayout>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 print:p-0">
 
-        {/* ── Printable Report Header (Only visible on print) ── */}
-        <div className="hidden print:block mb-8">
-          <div className="border-b-2 border-neutral-900 pb-4 mb-4">
-            <h1 className="text-xl font-bold uppercase tracking-wider text-neutral-900">CardioCenter — Informe Oficial de Ingresos y Facturación</h1>
-            <p className="text-sm font-semibold text-neutral-700">Dr(a). {user?.firstName} {user?.lastName}</p>
-            <p className="text-xs text-neutral-500">Fecha de emisión: {formatDate(new Date().toISOString())}</p>
+        {/* ── Executive Printable PDF Template (ONLY visible on print) ── */}
+        <div className="hidden print:block font-sans text-neutral-900 leading-normal">
+          {/* Header Membrete */}
+          <div className="flex items-center justify-between border-b-2 border-neutral-900 pb-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-600 text-white font-bold text-xl">
+                ❤️
+              </div>
+              <div>
+                <h1 className="text-xl font-extrabold uppercase tracking-tight text-neutral-900">CardioCenter</h1>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-red-600">Centro de Cardiología de Excelencia</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="inline-block rounded border border-neutral-300 bg-neutral-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-700">
+                Documento Oficial de Facturación
+              </span>
+              <p className="text-[10px] text-neutral-500 mt-1">Emisión: {formatDate(new Date().toISOString())}</p>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-4 bg-neutral-100 p-4 rounded-lg mb-6 text-xs font-semibold">
-            <div>Total Ingresos: <span className="font-mono font-bold text-neutral-900">${filteredTotal.toFixed(2)} USD</span></div>
-            <div>Consultas Atendidas: <span className="font-bold text-neutral-900">{filteredRevenue.length}</span></div>
-            <div>Promedio por Cita: <span className="font-mono font-bold text-neutral-900">${averageTicket.toFixed(2)} USD</span></div>
+
+          {/* Metadata Block */}
+          <div className="grid grid-cols-2 gap-4 rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 mb-6 text-xs">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Médico Tratante</p>
+              <p className="text-sm font-bold text-neutral-900">Dr(a). {user?.firstName} {user?.lastName}</p>
+              <p className="text-neutral-500">Especialista en Cardiología</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Período Auditado</p>
+              <p className="text-sm font-bold text-neutral-900">
+                {timePeriod === "THIS_MONTH" ? "Este Mes" : timePeriod === "LAST_MONTH" ? "Mes Anterior" : timePeriod === "THIS_YEAR" ? "Este Año" : "Histórico Completo"}
+              </p>
+              <p className="text-neutral-500">{filteredRevenue.length} transacciones registradas</p>
+            </div>
+          </div>
+
+          {/* KPI Executive Summary */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="rounded-lg border-2 border-neutral-900 bg-neutral-900 p-3 text-white">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">Total Recaudado</p>
+              <p className="text-lg font-extrabold font-mono mt-0.5">${filteredTotal.toFixed(2)} USD</p>
+            </div>
+            <div className="rounded-lg border border-neutral-300 bg-white p-3">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Consultas Atendidas</p>
+              <p className="text-lg font-extrabold text-neutral-900 mt-0.5">{filteredRevenue.length} pacientes</p>
+            </div>
+            <div className="rounded-lg border border-neutral-300 bg-white p-3">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Promedio por Cita</p>
+              <p className="text-lg font-extrabold font-mono text-neutral-900 mt-0.5">${averageTicket.toFixed(2)} USD</p>
+            </div>
+          </div>
+
+          {/* Transactions Table */}
+          <table className="w-full text-left text-xs border-collapse border border-neutral-300 mb-8">
+            <thead>
+              <tr className="bg-neutral-100 border-b border-neutral-300 text-[10px] font-bold uppercase tracking-wider text-neutral-700">
+                <th className="p-2.5 border-r border-neutral-300 w-8 text-center">#</th>
+                <th className="p-2.5 border-r border-neutral-300">Fecha y Hora</th>
+                <th className="p-2.5 border-r border-neutral-300">ID Paciente</th>
+                <th className="p-2.5 border-r border-neutral-300">Paciente</th>
+                <th className="p-2.5 border-r border-neutral-300 text-center">Estado</th>
+                <th className="p-2.5 text-right">Importe USD</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRevenue.map((a, idx) => {
+                const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente";
+                const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
+                return (
+                  <tr key={a.id} className="border-b border-neutral-200">
+                    <td className="p-2 border-r border-neutral-200 text-center font-mono text-neutral-500">{idx + 1}</td>
+                    <td className="p-2 border-r border-neutral-200 font-medium">{formatDate(a.date)} · {a.startTime} hs</td>
+                    <td className="p-2 border-r border-neutral-200 font-mono font-bold text-neutral-700">{pCode}</td>
+                    <td className="p-2 border-r border-neutral-200 font-semibold">{pName}</td>
+                    <td className="p-2 border-r border-neutral-200 text-center font-bold text-emerald-700">Cobrado ✓</td>
+                    <td className="p-2 text-right font-mono font-bold">${Number(a.totalAmount).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="bg-neutral-100 font-bold border-t-2 border-neutral-900 text-xs">
+                <td colSpan={5} className="p-2.5 text-right uppercase tracking-wider">Monto Total de Ingresos Auditados:</td>
+                <td className="p-2.5 text-right font-mono text-sm font-extrabold text-neutral-900">${filteredTotal.toFixed(2)} USD</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          {/* Footer Signature */}
+          <div className="mt-12 flex justify-between items-end text-[10px] text-neutral-500 pt-8 border-t border-neutral-200">
+            <div>
+              <p className="font-semibold text-neutral-700">CardioCenter — Sistema de Gestión Médica</p>
+              <p>Documento generado electrónicamente con firma de auditoría digital.</p>
+            </div>
+            <div className="text-center w-56">
+              <div className="border-b border-neutral-900 pb-1 mb-1"></div>
+              <p className="font-bold text-neutral-900">Dr(a). {user?.firstName} {user?.lastName}</p>
+              <p className="text-[9px]">Firma Autorizada / Sello Médico</p>
+            </div>
           </div>
         </div>
 

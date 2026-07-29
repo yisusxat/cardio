@@ -237,4 +237,16 @@
   animation: floatSlow 4s ease-in-out infinite;
 }
 
-
+@media print {
+  nav, footer, .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 1.2cm;
+  }
+}
