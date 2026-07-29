@@ -1,23 +1,30 @@
-import { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Calendar, Clock, CheckCircle, Users, ArrowRight,
   Heart, Settings, TrendingUp, DollarSign, RotateCcw,
-  Printer, Download, ArrowUpDown, Receipt,
-} from "lucide-react";
-import PageLayout from "../../components/layout/PageLayout";
-import AppointmentCard, { Appointment } from "../../components/appointments/AppointmentCard";
-import Spinner from "../../components/ui/Spinner";
-import ClinicalNoteModal from "../../components/ui/ClinicalNoteModal";
-import PatientAdminModal from "../../components/ui/PatientAdminModal";
-import api from "../../lib/api";
-import { useAuth } from "../../hooks/use-auth";
-import { useUIStore } from "../../stores/ui.store";
-import { formatDate, formatPrice, getPatientCode } from "../../lib/utils";
+  Printer, Download, ArrowUpDown, Receipt, Search, UserCheck,
+} from 'lucide-react';
+import PageLayout from '../../components/layout/PageLayout';
+import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
+import Spinner from '../../components/ui/Spinner';
+import ClinicalNoteModal from '../../components/ui/ClinicalNoteModal';
+import PatientAdminModal from '../../components/ui/PatientAdminModal';
+import api from '../../lib/api';
+import { useAuth } from '../../hooks/use-auth';
+import { useUIStore } from '../../stores/ui.store';
+import { formatDate, formatPrice, getPatientCode } from '../../lib/utils';
 
-type FilterType = "ALL" | "PENDING" | "CONFIRMED" | "COMPLETED" | "REVENUE";
-type TimePeriod = "ALL" | "THIS_MONTH" | "LAST_MONTH" | "THIS_YEAR";
-type SortOrder = "DATE_DESC" | "DATE_ASC" | "AMOUNT_DESC" | "AMOUNT_ASC";
+type FilterType = 'ALL' | 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'REVENUE';
+type TimePeriod = 'ALL' | 'THIS_MONTH' | 'LAST_MONTH' | 'THIS_YEAR';
+type SortOrder = 'DATE_DESC' | 'DATE_ASC' | 'AMOUNT_DESC' | 'AMOUNT_ASC';
+
+const PERIOD_LABELS: Record<TimePeriod, string> = {
+  ALL: 'Histórico Completo',
+  THIS_MONTH: 'Este Mes',
+  LAST_MONTH: 'Mes Anterior',
+  THIS_YEAR: 'Este Año',
+};
 
 export default function DoctorDashboardPage() {
   const { user } = useAuth();
@@ -25,23 +32,27 @@ export default function DoctorDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState<FilterType>("ALL");
+  const [activeFilter, setActiveFilter] = useState<FilterType>('ALL');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
   const [savedAdmins, setSavedAdmins] = useState<Record<string, boolean>>({});
 
-  // Revenue Report Controls
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>("ALL");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("DATE_DESC");
+  // Revenue Controls
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('ALL');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('DATE_DESC');
+
+  // Patients History Controls
+  const [patientSearch, setPatientSearch] = useState('');
+  const [patientPeriod, setPatientPeriod] = useState<TimePeriod>('ALL');
 
   const fetchAppointments = async () => {
     try {
-      const res = await api.get("/appointments");
+      const res = await api.get('/appointments');
       setAppointments(res.data.data ?? []);
     } catch {
-      toast.error("Error al cargar la agenda");
+      toast.error('Error al cargar la agenda');
     } finally {
       setLoading(false);
     }
@@ -53,27 +64,27 @@ export default function DoctorDashboardPage() {
     setActionId(id);
     try {
       await api.patch(`/appointments/${id}/status`, { status });
-      toast.success("Estado actualizado correctamente");
+      toast.success('Estado actualizado correctamente');
       fetchAppointments();
     } catch {
-      toast.error("No se pudo actualizar el estado de la cita");
+      toast.error('No se pudo actualizar el estado de la cita');
     } finally {
       setActionId(null);
     }
   };
 
-  const pending = appointments.filter((a) => a.status === "PENDING");
-  const confirmed = appointments.filter((a) => a.status === "CONFIRMED");
-  const completed = appointments.filter((a) => a.status === "COMPLETED");
+  const pending = appointments.filter((a) => a.status === 'PENDING');
+  const confirmed = appointments.filter((a) => a.status === 'CONFIRMED');
+  const completed = appointments.filter((a) => a.status === 'COMPLETED');
   const monthRevenue = completed.reduce((s, a) => s + Number(a.totalAmount ?? 0), 0);
 
-  const initials = user ? `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase() : "?";
+  const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
 
   const toggleFilter = (type: FilterType) => {
-    setActiveFilter((prev) => (prev === type ? "ALL" : type));
+    setActiveFilter((prev) => (prev === type ? 'ALL' : type));
   };
 
-  // Filtered & Sorted Revenue Appointments
+  // Filtered Revenue List
   const filteredRevenue = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -81,25 +92,25 @@ export default function DoctorDashboardPage() {
 
     let list = completed.filter((a) => {
       const d = new Date(a.date);
-      if (timePeriod === "THIS_MONTH") {
+      if (timePeriod === 'THIS_MONTH') {
         return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
       }
-      if (timePeriod === "LAST_MONTH") {
+      if (timePeriod === 'LAST_MONTH') {
         const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
         const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
         return d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth;
       }
-      if (timePeriod === "THIS_YEAR") {
+      if (timePeriod === 'THIS_YEAR') {
         return d.getFullYear() === currentYear;
       }
       return true;
     });
 
     return list.sort((a, b) => {
-      if (sortOrder === "DATE_DESC") return new Date(b.date).getTime() - new Date(a.date).getTime();
-      if (sortOrder === "DATE_ASC") return new Date(a.date).getTime() - new Date(b.date).getTime();
-      if (sortOrder === "AMOUNT_DESC") return Number(b.totalAmount) - Number(a.totalAmount);
-      if (sortOrder === "AMOUNT_ASC") return Number(a.totalAmount) - Number(b.totalAmount);
+      if (sortOrder === 'DATE_DESC') return new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (sortOrder === 'DATE_ASC') return new Date(a.date).getTime() - new Date(a.date).getTime();
+      if (sortOrder === 'AMOUNT_DESC') return Number(b.totalAmount) - Number(a.totalAmount);
+      if (sortOrder === 'AMOUNT_ASC') return Number(a.totalAmount) - Number(b.totalAmount);
       return 0;
     });
   }, [completed, timePeriod, sortOrder]);
@@ -113,36 +124,108 @@ export default function DoctorDashboardPage() {
     return filteredTotal / filteredRevenue.length;
   }, [filteredRevenue, filteredTotal]);
 
-  // Export Revenue Report to CSV
-  const exportCSV = () => {
-    if (filteredRevenue.length === 0) {
-      toast.error("No hay registros para exportar");
+  // Filtered Completed Patients List
+  const filteredCompletedPatients = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    return completed.filter((a) => {
+      const d = new Date(a.date);
+      // Period filter
+      if (patientPeriod === 'THIS_MONTH' && !(d.getFullYear() === currentYear && d.getMonth() === currentMonth)) {
+        return false;
+      }
+      if (patientPeriod === 'LAST_MONTH') {
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        if (!(d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth)) return false;
+      }
+      if (patientPeriod === 'THIS_YEAR' && d.getFullYear() !== currentYear) {
+        return false;
+      }
+
+      // Search query filter
+      if (patientSearch.trim()) {
+        const q = patientSearch.toLowerCase().trim();
+        const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}`.toLowerCase() : '';
+        const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId).toLowerCase();
+        const reason = (a.reason ?? '').toLowerCase();
+        return pName.includes(q) || pCode.includes(q) || reason.includes(q);
+      }
+
+      return true;
+    });
+  }, [completed, patientPeriod, patientSearch]);
+
+  // Unique Patients Count
+  const uniquePatientsCount = useMemo(() => {
+    const ids = new Set(filteredCompletedPatients.map((a) => a.patient?.id ?? (a as any).patientId));
+    return ids.size;
+  }, [filteredCompletedPatients]);
+
+  // Export Patients History CSV
+  const exportPatientsCSV = () => {
+    if (filteredCompletedPatients.length === 0) {
+      toast.error('No hay registros para exportar');
       return;
     }
-    const headers = ["Fecha", "Hora", "ID Paciente", "Nombre Paciente", "Monto (USD)", "Estado"];
-    const rows = filteredRevenue.map((a) => {
-      const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente";
+    const headers = ['Fecha', 'Hora', 'ID Paciente', 'Nombre Paciente', 'Motivo Consulta', 'Monto (USD)', 'Estado'];
+    const rows = filteredCompletedPatients.map((a) => {
+      const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente';
       const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
       return [
-        a.date.split("T")[0],
+        a.date.split('T')[0],
+        a.startTime,
+        pCode,
+        `"${pName}"`,
+        `"${a.reason ?? 'Consulta'}"`,
+        Number(a.totalAmount).toFixed(2),
+        'Atendido',
+      ];
+    });
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Historial_Pacientes_Dr_${user?.lastName ?? 'Medico'}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Historial de Pacientes en CSV descargado');
+  };
+
+  const exportRevenueCSV = () => {
+    if (filteredRevenue.length === 0) {
+      toast.error('No hay registros para exportar');
+      return;
+    }
+    const headers = ['Fecha', 'Hora', 'ID Paciente', 'Nombre Paciente', 'Monto (USD)', 'Estado'];
+    const rows = filteredRevenue.map((a) => {
+      const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente';
+      const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
+      return [
+        a.date.split('T')[0],
         a.startTime,
         pCode,
         `"${pName}"`,
         Number(a.totalAmount).toFixed(2),
-        "Cobrado",
+        'Cobrado',
       ];
     });
 
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Reporte_Ingresos_Dr_${user?.lastName ?? "Medico"}_${new Date().toISOString().split("T")[0]}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Reporte_Ingresos_Dr_${user?.lastName ?? 'Medico'}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("Reporte CSV descargado exitosamente");
+    toast.success('Reporte de Ingresos en CSV descargado');
   };
 
   const handlePrintReport = () => {
@@ -165,6 +248,7 @@ export default function DoctorDashboardPage() {
               <div className="text-xs font-mono tracking-widest mt-1 opacity-60">REGISTRO AUDITADO EN SISTEMA</div>
             </div>
           </div>
+
           {/* Header Membrete */}
           <div className="flex items-center justify-between border-b-2 border-neutral-900 pb-4 mb-6">
             <div className="flex items-center gap-3">
@@ -178,7 +262,7 @@ export default function DoctorDashboardPage() {
             </div>
             <div className="text-right">
               <span className="inline-block rounded border border-neutral-300 bg-neutral-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-neutral-700">
-                Documento Oficial de Facturación
+                {activeFilter === 'COMPLETED' ? 'Historial de Pacientes Atendidos' : 'Documento Oficial de Facturación'}
               </span>
               <p className="text-[10px] text-neutral-500 mt-1">Emisión: {formatDate(new Date().toISOString())}</p>
             </div>
@@ -194,29 +278,50 @@ export default function DoctorDashboardPage() {
             <div className="text-right">
               <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Período Auditado</p>
               <p className="text-sm font-bold text-neutral-900">
-                {timePeriod === "THIS_MONTH" ? "Este Mes" : timePeriod === "LAST_MONTH" ? "Mes Anterior" : timePeriod === "THIS_YEAR" ? "Este Año" : "Histórico Completo"}
+                {activeFilter === 'COMPLETED' ? PERIOD_LABELS[patientPeriod] : PERIOD_LABELS[timePeriod]}
               </p>
-              <p className="text-neutral-500">{filteredRevenue.length} transacciones registradas</p>
+              <p className="text-neutral-500">
+                {activeFilter === 'COMPLETED' ? `${filteredCompletedPatients.length} consultas registradas` : `${filteredRevenue.length} transacciones registradas`}
+              </p>
             </div>
           </div>
 
           {/* KPI Executive Summary */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="rounded-lg border-2 border-neutral-900 bg-neutral-900 p-3 text-white">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">Total Recaudado</p>
-              <p className="text-lg font-extrabold font-mono mt-0.5">${filteredTotal.toFixed(2)} USD</p>
+          {activeFilter === 'COMPLETED' ? (
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="rounded-lg border-2 border-neutral-900 bg-neutral-900 p-3 text-white">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">Total Pacientes Atendidos</p>
+                <p className="text-lg font-extrabold mt-0.5">{filteredCompletedPatients.length} consultas</p>
+              </div>
+              <div className="rounded-lg border border-neutral-300 bg-white p-3">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Pacientes Únicos</p>
+                <p className="text-lg font-extrabold text-neutral-900 mt-0.5">{uniquePatientsCount} pacientes</p>
+              </div>
+              <div className="rounded-lg border border-neutral-300 bg-white p-3">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Monto Facturado</p>
+                <p className="text-lg font-extrabold font-mono text-neutral-900 mt-0.5">
+                  ${filteredCompletedPatients.reduce((s, a) => s + Number(a.totalAmount ?? 0), 0).toFixed(2)} USD
+                </p>
+              </div>
             </div>
-            <div className="rounded-lg border border-neutral-300 bg-white p-3">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Consultas Atendidas</p>
-              <p className="text-lg font-extrabold text-neutral-900 mt-0.5">{filteredRevenue.length} pacientes</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="rounded-lg border-2 border-neutral-900 bg-neutral-900 p-3 text-white">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-400">Total Recaudado</p>
+                <p className="text-lg font-extrabold font-mono mt-0.5">${filteredTotal.toFixed(2)} USD</p>
+              </div>
+              <div className="rounded-lg border border-neutral-300 bg-white p-3">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Consultas Atendidas</p>
+                <p className="text-lg font-extrabold text-neutral-900 mt-0.5">{filteredRevenue.length} pacientes</p>
+              </div>
+              <div className="rounded-lg border border-neutral-300 bg-white p-3">
+                <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Promedio por Cita</p>
+                <p className="text-lg font-extrabold font-mono text-neutral-900 mt-0.5">${averageTicket.toFixed(2)} USD</p>
+              </div>
             </div>
-            <div className="rounded-lg border border-neutral-300 bg-white p-3">
-              <p className="text-[9px] font-bold uppercase tracking-wider text-neutral-500">Promedio por Cita</p>
-              <p className="text-lg font-extrabold font-mono text-neutral-900 mt-0.5">${averageTicket.toFixed(2)} USD</p>
-            </div>
-          </div>
+          )}
 
-          {/* Transactions Table */}
+          {/* Transactions / Patients Table */}
           <table className="w-full text-left text-xs border-collapse border border-neutral-300 mb-8">
             <thead>
               <tr className="bg-neutral-100 border-b border-neutral-300 text-[10px] font-bold uppercase tracking-wider text-neutral-700">
@@ -224,13 +329,13 @@ export default function DoctorDashboardPage() {
                 <th className="p-2.5 border-r border-neutral-300">Fecha y Hora</th>
                 <th className="p-2.5 border-r border-neutral-300">ID Paciente</th>
                 <th className="p-2.5 border-r border-neutral-300">Paciente</th>
-                <th className="p-2.5 border-r border-neutral-300 text-center">Estado</th>
+                <th className="p-2.5 border-r border-neutral-300">Motivo / Diagnóstico</th>
                 <th className="p-2.5 text-right">Importe USD</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRevenue.map((a, idx) => {
-                const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente";
+              {(activeFilter === 'COMPLETED' ? filteredCompletedPatients : filteredRevenue).map((a, idx) => {
+                const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente';
                 const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
                 return (
                   <tr key={a.id} className="border-b border-neutral-200">
@@ -238,18 +343,12 @@ export default function DoctorDashboardPage() {
                     <td className="p-2 border-r border-neutral-200 font-medium">{formatDate(a.date)} · {a.startTime} hs</td>
                     <td className="p-2 border-r border-neutral-200 font-mono font-bold text-neutral-700">{pCode}</td>
                     <td className="p-2 border-r border-neutral-200 font-semibold">{pName}</td>
-                    <td className="p-2 border-r border-neutral-200 text-center font-bold text-emerald-700">Cobrado ✓</td>
+                    <td className="p-2 border-r border-neutral-200 text-neutral-600">{a.reason ?? 'Consulta de Control'}</td>
                     <td className="p-2 text-right font-mono font-bold">${Number(a.totalAmount).toFixed(2)}</td>
                   </tr>
                 );
               })}
             </tbody>
-            <tfoot>
-              <tr className="bg-neutral-100 font-bold border-t-2 border-neutral-900 text-xs">
-                <td colSpan={5} className="p-2.5 text-right uppercase tracking-wider">Monto Total de Ingresos Auditados:</td>
-                <td className="p-2.5 text-right font-mono text-sm font-extrabold text-neutral-900">${filteredTotal.toFixed(2)} USD</td>
-              </tr>
-            </tfoot>
           </table>
 
           {/* Footer Signature */}
@@ -271,7 +370,7 @@ export default function DoctorDashboardPage() {
           <div className="flex items-center gap-4">
             <div
               className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-md"
-              style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)" }}
+              style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}
             >
               {initials}
             </div>
@@ -284,9 +383,9 @@ export default function DoctorDashboardPage() {
             </div>
           </div>
 
-          {activeFilter !== "ALL" && (
+          {activeFilter !== 'ALL' && (
             <button
-              onClick={() => setActiveFilter("ALL")}
+              onClick={() => setActiveFilter('ALL')}
               className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 transition-all shadow-sm"
             >
               <RotateCcw className="h-3.5 w-3.5 text-neutral-400" />
@@ -298,10 +397,10 @@ export default function DoctorDashboardPage() {
         {/* ── Interactive KPI Filter Cards (Hidden on print) ───────────────────────── */}
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4 print:hidden">
           {[
-            { id: "PENDING" as const, icon: Clock, value: pending.length, label: "Por confirmar", color: "text-amber-600", bg: "bg-amber-50", accent: "border-amber-200" },
-            { id: "CONFIRMED" as const, icon: Calendar, value: confirmed.length, label: "Confirmadas", color: "text-primary-600", bg: "bg-primary-50", accent: "border-primary-200" },
-            { id: "COMPLETED" as const, icon: Users, value: completed.length, label: "Pacientes atendidos", color: "text-emerald-600", bg: "bg-emerald-50", accent: "border-emerald-200" },
-            { id: "REVENUE" as const, icon: TrendingUp, value: `$${monthRevenue.toLocaleString()}`, label: "Ingresos totales", color: "text-neutral-700", bg: "bg-neutral-100", accent: "border-neutral-200" },
+            { id: 'PENDING' as const, icon: Clock, value: pending.length, label: 'Por confirmar', color: 'text-amber-600', bg: 'bg-amber-50', accent: 'border-amber-200' },
+            { id: 'CONFIRMED' as const, icon: Calendar, value: confirmed.length, label: 'Confirmadas', color: 'text-primary-600', bg: 'bg-primary-50', accent: 'border-primary-200' },
+            { id: 'COMPLETED' as const, icon: Users, value: completed.length, label: 'Pacientes atendidos', color: 'text-emerald-600', bg: 'bg-emerald-50', accent: 'border-emerald-200' },
+            { id: 'REVENUE' as const, icon: TrendingUp, value: `$${monthRevenue.toLocaleString()}`, label: 'Ingresos totales', color: 'text-neutral-700', bg: 'bg-neutral-100', accent: 'border-neutral-200' },
           ].map((s) => {
             const isActive = activeFilter === s.id;
             return (
@@ -310,10 +409,10 @@ export default function DoctorDashboardPage() {
                 onClick={() => toggleFilter(s.id)}
                 className={`group flex flex-col justify-between rounded-2xl border bg-white p-5 transition-all duration-200 cursor-pointer select-none ${
                   isActive
-                    ? "ring-2 ring-primary-500 border-transparent shadow-lg bg-primary-50/20 scale-[1.02]"
+                    ? 'ring-2 ring-primary-500 border-transparent shadow-lg bg-primary-50/20 scale-[1.02]'
                     : `${s.accent} hover:-translate-y-1 hover:shadow-md`
                 }`}
-                style={{ boxShadow: isActive ? undefined : "0 4px 24px -4px rgba(0,0,0,0.06)" }}
+                style={{ boxShadow: isActive ? undefined : '0 4px 24px -4px rgba(0,0,0,0.06)' }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.bg}`}>
@@ -347,14 +446,14 @@ export default function DoctorDashboardPage() {
           <div className="flex flex-col gap-10">
 
             {/* 1. Pending requests (Visible on ALL or PENDING filter) */}
-            {(activeFilter === "ALL" || activeFilter === "PENDING") && (
+            {(activeFilter === 'ALL' || activeFilter === 'PENDING') && (
               <section className="print:hidden">
                 <div className="mb-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                     <h2 className="text-base font-semibold text-neutral-900">Solicitudes Pendientes</h2>
                     <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
-                      {pending.length} nueva{pending.length !== 1 ? "s" : ""}
+                      {pending.length} nueva{pending.length !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
@@ -370,7 +469,7 @@ export default function DoctorDashboardPage() {
                         key={a.id}
                         appointment={a}
                         viewAs="doctor"
-                        patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente"}
+                        patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente'}
                         onStatusChange={handleStatusChange}
                         onOpenPatientAdmin={(app) => { setSelectedAppointment(app); setAdminModalOpen(true); }}
                         loading={actionId === a.id}
@@ -382,13 +481,13 @@ export default function DoctorDashboardPage() {
             )}
 
             {/* 2. Confirmed agenda (Visible on ALL or CONFIRMED filter) */}
-            {(activeFilter === "ALL" || activeFilter === "CONFIRMED") && (
+            {(activeFilter === 'ALL' || activeFilter === 'CONFIRMED') && (
               <section className="print:hidden">
                 <div className="mb-5 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-500" />
                   <h2 className="text-base font-semibold text-neutral-900">Agenda Confirmada</h2>
                   <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
-                    {confirmed.length} activa{confirmed.length !== 1 ? "s" : ""}
+                    {confirmed.length} activa{confirmed.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 {confirmed.length === 0 ? (
@@ -406,7 +505,7 @@ export default function DoctorDashboardPage() {
                         key={a.id}
                         appointment={a}
                         viewAs="doctor"
-                        patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente"}
+                        patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente'}
                         onStatusChange={handleStatusChange}
                         onOpenClinicalNote={(app) => { setSelectedAppointment(app); setNoteModalOpen(true); }}
                         onOpenPatientAdmin={(app) => { setSelectedAppointment(app); setAdminModalOpen(true); }}
@@ -420,31 +519,122 @@ export default function DoctorDashboardPage() {
               </section>
             )}
 
-            {/* 3. Completed patients history (Visible on COMPLETED filter) */}
-            {activeFilter === "COMPLETED" && (
+            {/* 3. Completed Patients History Enhanced (Visible on COMPLETED filter) */}
+            {activeFilter === 'COMPLETED' && (
               <section className="animate-fade-in print:hidden">
-                <div className="mb-5 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-emerald-600" />
-                  <h2 className="text-base font-semibold text-neutral-900">Historial de Pacientes Atendidos</h2>
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-                    {completed.length} paciente{completed.length !== 1 ? "s" : ""}
-                  </span>
+
+                {/* Toolbar & Search Bar for Completed Patients */}
+                <div className="mb-6 rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-5 w-5 text-emerald-600" />
+                        <h2 className="text-lg font-bold text-neutral-900">Historial de Pacientes Atendidos</h2>
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-0.5">Busca expedientes, consulta fichas clínicas y emite reportes de pacientes atendidos</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={handlePrintReport}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-all shadow-sm"
+                      >
+                        <Printer className="h-4 w-4" /> Reporte PDF
+                      </button>
+                      <button
+                        onClick={exportPatientsCSV}
+                        className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-all"
+                      >
+                        <Download className="h-4 w-4 text-emerald-600" /> Exportar CSV
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search input and Period Filters */}
+                  <div className="mt-4 pt-4 border-t border-neutral-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                    {/* Live Search Input */}
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                      <input
+                        type="text"
+                        value={patientSearch}
+                        onChange={(e) => setPatientSearch(e.target.value)}
+                        placeholder="Buscar por paciente, cédula o código (PAT-XXX)..."
+                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50/50 pl-10 pr-4 py-2 text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:border-primary-400 focus:bg-white focus:outline-none transition-all"
+                      />
+                      {patientSearch && (
+                        <button
+                          onClick={() => setPatientSearch('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400 hover:text-neutral-600"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Period filters */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1 hidden sm:inline">Período:</span>
+                      {[
+                        { id: 'ALL' as const, label: 'Todos' },
+                        { id: 'THIS_MONTH' as const, label: 'Este Mes' },
+                        { id: 'LAST_MONTH' as const, label: 'Mes Anterior' },
+                        { id: 'THIS_YEAR' as const, label: 'Este Año' },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setPatientPeriod(p.id)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+                            patientPeriod === p.id
+                              ? 'bg-neutral-900 text-white shadow-sm'
+                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                {completed.length === 0 ? (
+
+                {/* Summary KPI Cards for Patients History */}
+                <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                    <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Consultas Completadas</p>
+                    <p className="text-2xl font-bold text-emerald-900 mt-1">{filteredCompletedPatients.length} atenciones</p>
+                  </div>
+                  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Pacientes Únicos</p>
+                    <p className="text-2xl font-bold text-neutral-900 mt-1">{uniquePatientsCount} pacientes</p>
+                  </div>
+                  <div className="rounded-2xl border border-primary-100 bg-primary-50/50 p-4">
+                    <p className="text-xs font-semibold text-primary-800 uppercase tracking-wider">Monto Total Atendido</p>
+                    <p className="text-2xl font-bold text-primary-900 mt-1">
+                      ${filteredCompletedPatients.reduce((s, a) => s + Number(a.totalAmount ?? 0), 0).toLocaleString()} USD
+                    </p>
+                  </div>
+                </div>
+
+                {/* Patient Cards Grid */}
+                {filteredCompletedPatients.length === 0 ? (
                   <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-10 text-center">
                     <Users className="h-8 w-8 text-neutral-300 mb-2" />
-                    <p className="text-sm font-medium text-neutral-600">Aún no hay pacientes marcados como atendidos</p>
+                    <p className="text-sm font-medium text-neutral-600">
+                      {patientSearch ? 'No se encontraron pacientes que coincidan con la búsqueda' : 'No hay pacientes atendidos en el período seleccionado'}
+                    </p>
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {completed.map((a) => (
+                    {filteredCompletedPatients.map((a) => (
                       <AppointmentCard
                         key={a.id}
                         appointment={a}
                         viewAs="doctor"
-                        patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente"}
+                        patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente'}
                         onOpenClinicalNote={(app) => { setSelectedAppointment(app); setNoteModalOpen(true); }}
                         onOpenPatientAdmin={(app) => { setSelectedAppointment(app); setAdminModalOpen(true); }}
+                        clinicalNoteSaved={!!savedNotes[a.id]}
+                        patientAdminSaved={!!savedAdmins[a.id] || !!a.patient?.patientProfile?.dateOfBirth}
                       />
                     ))}
                   </div>
@@ -453,7 +643,7 @@ export default function DoctorDashboardPage() {
             )}
 
             {/* 4. Revenue breakdown & Report Controls (Visible on REVENUE filter) */}
-            {activeFilter === "REVENUE" && (
+            {activeFilter === 'REVENUE' && (
               <section className="animate-fade-in">
 
                 {/* Controls & Toolbar (Hidden on print) */}
@@ -475,7 +665,7 @@ export default function DoctorDashboardPage() {
                         <Printer className="h-4 w-4" /> Emitir Reporte PDF
                       </button>
                       <button
-                        onClick={exportCSV}
+                        onClick={exportRevenueCSV}
                         className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-all"
                       >
                         <Download className="h-4 w-4 text-emerald-600" /> Exportar CSV
@@ -488,18 +678,18 @@ export default function DoctorDashboardPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">Período:</span>
                       {[
-                        { id: "ALL" as const, label: "Todos" },
-                        { id: "THIS_MONTH" as const, label: "Este Mes" },
-                        { id: "LAST_MONTH" as const, label: "Mes Anterior" },
-                        { id: "THIS_YEAR" as const, label: "Este Año" },
+                        { id: 'ALL' as const, label: 'Todos' },
+                        { id: 'THIS_MONTH' as const, label: 'Este Mes' },
+                        { id: 'LAST_MONTH' as const, label: 'Mes Anterior' },
+                        { id: 'THIS_YEAR' as const, label: 'Este Año' },
                       ].map((p) => (
                         <button
                           key={p.id}
                           onClick={() => setTimePeriod(p.id)}
                           className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                             timePeriod === p.id
-                              ? "bg-neutral-900 text-white shadow-sm"
-                              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                              ? 'bg-neutral-900 text-white shadow-sm'
+                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                           }`}
                         >
                           {p.label}
@@ -525,8 +715,8 @@ export default function DoctorDashboardPage() {
                   </div>
                 </div>
 
-                {/* Summary KPI Cards for Report */}
-                <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Summary KPI Cards for Revenue Report (Hidden on print) */}
+                <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden">
                   <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
                     <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Total Cobrado</p>
                     <p className="text-2xl font-bold text-emerald-900 mt-1">${filteredTotal.toLocaleString()} USD</p>
@@ -541,17 +731,17 @@ export default function DoctorDashboardPage() {
                   </div>
                 </div>
 
-                {/* Transactions Table */}
+                {/* Transactions Table (Hidden on print) */}
                 {filteredRevenue.length === 0 ? (
-                  <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-10 text-center">
+                  <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-10 text-center print:hidden">
                     <DollarSign className="h-8 w-8 text-neutral-300 mb-2" />
                     <p className="text-sm font-medium text-neutral-600">No hay registros de facturación para el período seleccionado</p>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden">
+                  <div className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden print:hidden">
                     <div className="divide-y divide-neutral-100">
                       {filteredRevenue.map((a) => {
-                        const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente";
+                        const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente';
                         const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
                         return (
                           <div key={a.id} className="flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors">
@@ -583,16 +773,16 @@ export default function DoctorDashboardPage() {
             )}
 
             {/* Quick links */}
-            {activeFilter === "ALL" && (
+            {activeFilter === 'ALL' && (
               <section className="grid gap-4 sm:grid-cols-2 print:hidden">
                 {[
-                  { to: "/doctor/schedules", icon: Calendar, title: "Gestionar Horarios", desc: "Configura tu disponibilidad semanal", color: "bg-primary-50 text-primary-600" },
-                  { to: "/doctor/services", icon: Settings, title: "Gestionar Servicios", desc: "Administra tus servicios y precios", color: "bg-neutral-100 text-neutral-600" },
+                  { to: '/doctor/schedules', icon: Calendar, title: 'Gestionar Horarios', desc: 'Configura tu disponibilidad semanal', color: 'bg-primary-50 text-primary-600' },
+                  { to: '/doctor/services', icon: Settings, title: 'Gestionar Servicios', desc: 'Administra tus servicios y precios', color: 'bg-neutral-100 text-neutral-600' },
                 ].map((l) => (
                   <Link key={l.to} to={l.to}>
                     <div
                       className="flex items-center justify-between rounded-2xl border border-neutral-100 bg-white p-5 transition-all duration-200 hover:border-neutral-200 hover:-translate-y-0.5 cursor-pointer"
-                      style={{ boxShadow: "0 4px 24px -4px rgba(0,0,0,0.05)" }}
+                      style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.05)' }}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${l.color}`}>
@@ -619,8 +809,8 @@ export default function DoctorDashboardPage() {
           isOpen={noteModalOpen}
           onClose={() => { setNoteModalOpen(false); setSelectedAppointment(null); }}
           appointmentId={selectedAppointment.id}
-          patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : "Paciente"}
-          dateStr={selectedAppointment.date.split("T")[0]}
+          patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : 'Paciente'}
+          dateStr={selectedAppointment.date.split('T')[0]}
           onSaved={() => {
             if (selectedAppointment) {
               setSavedNotes((prev) => ({ ...prev, [selectedAppointment.id]: true }));
@@ -634,8 +824,8 @@ export default function DoctorDashboardPage() {
         <PatientAdminModal
           isOpen={adminModalOpen}
           onClose={() => { setAdminModalOpen(false); setSelectedAppointment(null); }}
-          patientId={selectedAppointment.patient ? (selectedAppointment.patient as any).id ?? (selectedAppointment as any).patientId : ""}
-          patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : "Paciente"}
+          patientId={selectedAppointment.patient ? (selectedAppointment.patient as any).id ?? (selectedAppointment as any).patientId : ''}
+          patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : 'Paciente'}
           onSaved={() => {
             if (selectedAppointment) {
               setSavedAdmins((prev) => ({ ...prev, [selectedAppointment.id]: true }));
