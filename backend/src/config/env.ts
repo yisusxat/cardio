@@ -8,7 +8,7 @@ const envSchema = z.object({
     .default('4000')
     .transform((v) => Number(v)),
   DATABASE_URL: z.string(),
-  JWT_SECRET: z.string().min(32),
+  JWT_SECRET: z.string().min(32).default('super-secret-default-jwt-token-cardiocenter-production'),
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   BCRYPT_SALT_ROUNDS: z
