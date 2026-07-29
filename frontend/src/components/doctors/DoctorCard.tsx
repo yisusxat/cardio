@@ -84,13 +84,13 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
             {doctor.services.slice(0, 3).map((s) => (
               <span
                 key={s.id}
-                className="rounded-lg bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-600"
+                className="rounded-lg bg-primary-50/60 px-2.5 py-0.5 text-xs font-medium text-primary-700"
               >
                 {s.name}
               </span>
             ))}
             {doctor.services.length > 3 && (
-              <span className="rounded-lg bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-400">
+              <span className="rounded-lg bg-primary-50/60 px-2.5 py-0.5 text-xs text-primary-400">
                 +{doctor.services.length - 3} más
               </span>
             )}
@@ -99,7 +99,7 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between border-t border-neutral-100 bg-neutral-50/60 px-6 py-3.5 transition-colors duration-200 group-hover:bg-primary-50/40">
+      <div className="flex items-center justify-between border-t border-primary-50 bg-primary-50/40 px-6 py-3.5 transition-colors duration-200 group-hover:bg-primary-50">
         <div className="flex items-center gap-1.5 text-xs text-neutral-400">
           <Clock className="h-3.5 w-3.5 flex-shrink-0" />
           <span>{days.length > 0 ? days.map((d) => DAY_ABBR[d]).join(', ') : 'Sin horario'}</span>

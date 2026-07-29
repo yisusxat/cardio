@@ -42,9 +42,7 @@ export default function DoctorsPage() {
   return (
     <PageLayout>
       {/* Page header */}
-      <div
-        className="relative overflow-hidden border-b border-neutral-100 bg-white py-14"
-      >
+      <div className="relative overflow-hidden border-b border-neutral-100 bg-white py-14">
         <div
           className="pointer-events-none absolute inset-0"
           style={{
@@ -84,8 +82,8 @@ export default function DoctorsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100">
-              <Search className="h-6 w-6 text-neutral-400" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50">
+              <Search className="h-6 w-6 text-primary-300" />
             </div>
             <p className="font-medium text-neutral-700">Sin resultados</p>
             <p className="text-sm text-neutral-400">No se encontraron médicos con esos criterios</p>

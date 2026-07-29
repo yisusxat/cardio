@@ -148,17 +148,17 @@ export default function LandingPage() {
       </section>
 
       {/* ── Stats ───────────────────────────────────────────────────────────── */}
-      <section className="bg-neutral-50 py-16">
+      <section className="bg-white py-16 border-b border-neutral-100">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 animate-fade-up">
             {STATS.map((s, i) => (
               <div
                 key={s.label}
-                className="stat-card group animate-fade-up"
+                className="group flex flex-col items-center justify-center rounded-2xl border border-neutral-100 bg-white p-6 text-center shadow-luxury transition-all duration-300 hover:border-primary-200 hover:shadow-luxury-md"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 transition-colors duration-200 group-hover:bg-primary-100">
-                  <s.icon className="h-5 w-5 text-primary-600" />
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 transition-all duration-300 group-hover:bg-primary-600 group-hover:shadow-red-glow">
+                  <s.icon className="h-5 w-5 text-primary-600 transition-colors duration-300 group-hover:text-white" />
                 </div>
                 <p className="text-3xl font-bold text-neutral-900 tracking-tight">{s.value}</p>
                 <p className="mt-1 text-xs font-medium text-neutral-400 text-center leading-tight">{s.label}</p>
@@ -169,7 +169,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Why us ──────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-24">
+      <section className="bg-white py-24 border-b border-neutral-100">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="section-label mb-5 mx-auto w-fit">
@@ -188,7 +188,7 @@ export default function LandingPage() {
             {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="group relative rounded-3xl border border-neutral-100 bg-neutral-50 p-8 transition-all duration-300 hover:border-primary-100 hover:bg-white hover:shadow-luxury-md animate-fade-up"
+                className="group relative rounded-3xl border border-neutral-100 bg-white p-8 transition-all duration-300 hover:border-primary-200 hover:shadow-luxury-md animate-fade-up"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 {/* Number watermark */}
@@ -209,7 +209,7 @@ export default function LandingPage() {
 
       {/* ── Doctors ─────────────────────────────────────────────────────────── */}
       {doctors.length > 0 && (
-        <section className="bg-neutral-50 py-24">
+        <section className="bg-white py-24 border-b border-neutral-100">
           <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
             <div className="flex items-end justify-between mb-12">
               <div>

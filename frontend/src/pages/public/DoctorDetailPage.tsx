@@ -150,7 +150,7 @@ export default function DoctorDetailPage() {
                   {doctor.schedules.map((s) => (
                     <div key={s.id} className="flex items-center justify-between text-sm">
                       <span className="font-medium text-neutral-700">{getDayName(s.dayOfWeek)}</span>
-                      <span className="rounded-lg bg-neutral-100 px-2.5 py-0.5 text-xs text-neutral-500">
+                      <span className="rounded-lg border border-primary-100 bg-primary-50/60 px-2.5 py-0.5 text-xs text-primary-600">
                         {s.startTime} – {s.endTime}
                       </span>
                     </div>
@@ -172,7 +172,7 @@ export default function DoctorDetailPage() {
                   {activeServices.map((s) => (
                     <div
                       key={s.id}
-                      className="group relative overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50 p-4 transition-all duration-200 hover:border-primary-200/60 hover:bg-white hover:shadow-luxury"
+                      className="group relative overflow-hidden rounded-xl border border-neutral-100 bg-white p-4 transition-all duration-200 hover:border-primary-200 hover:bg-primary-50/30 hover:shadow-luxury"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-2.5 min-w-0">
