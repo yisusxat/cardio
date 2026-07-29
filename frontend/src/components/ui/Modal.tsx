@@ -44,7 +44,7 @@ export default function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
         className="absolute inset-0 animate-fade-in"
@@ -55,7 +55,7 @@ export default function Modal({
       {/* Dialog */}
       <div
         className={cn(
-          'relative z-10 w-full overflow-hidden rounded-2xl bg-white animate-slide-up',
+          'relative z-10 flex flex-col w-full max-h-[85vh] sm:max-h-[90vh] overflow-hidden rounded-2xl bg-white animate-slide-up',
           sizeClasses[size],
           className,
         )}
@@ -65,12 +65,12 @@ export default function Modal({
       >
         {/* Accent stripe */}
         <div
-          className="h-1 w-full"
+          className="h-1 w-full flex-shrink-0"
           style={{ background: 'linear-gradient(90deg, #9f1239, #e11d48, #f43f5e)' }}
         />
 
         {title && (
-          <div className="flex items-center justify-between border-b border-neutral-100 px-6 py-4">
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-neutral-100 px-6 py-4 bg-white">
             <div className="flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-50">
                 <Heart className="h-3.5 w-3.5 text-primary-600 fill-primary-300" />
@@ -87,7 +87,7 @@ export default function Modal({
           </div>
         )}
 
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto flex-1">{children}</div>
       </div>
     </div>
   );
