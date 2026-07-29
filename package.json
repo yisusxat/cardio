@@ -18,11 +18,7 @@
     "lint-staged": "^15.2.7"
   },
   "lint-staged": {
-    "backend/**/*.{ts,tsx}": [
-      "cd backend && npm run lint"
-    ],
-    "frontend/**/*.{ts,tsx}": [
-      "cd frontend && npm run lint"
-    ]
+    "backend/**/*.{ts,tsx}": "npm run lint -w backend --",
+    "frontend/**/*.{ts,tsx}": "npm run lint -w frontend --"
   }
 }
