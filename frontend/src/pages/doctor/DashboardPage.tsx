@@ -464,8 +464,8 @@ export default function DoctorDashboardPage() {
         {/* ── Interactive KPI Filter Cards (Hidden on print) ───────────────────────── */}
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4 print:hidden">
           {[
-            { id: 'PENDING' as const, icon: Clock, value: pending.length, label: 'Por confirmar', color: 'text-amber-600', bg: 'bg-amber-50', accent: 'border-amber-200' },
-            { id: 'CONFIRMED' as const, icon: Calendar, value: confirmed.length, label: 'Confirmadas', color: 'text-primary-600', bg: 'bg-primary-50', accent: 'border-primary-200' },
+            { id: 'PENDING' as const, icon: Clock, value: pending.length, label: 'Espera por Atender', color: 'text-amber-600', bg: 'bg-amber-50', accent: 'border-amber-200' },
+            { id: 'CONFIRMED' as const, icon: Calendar, value: confirmed.length, label: 'En Atención', color: 'text-primary-600', bg: 'bg-primary-50', accent: 'border-primary-200' },
             { id: 'COMPLETED' as const, icon: Users, value: completed.length, label: 'Pacientes atendidos', color: 'text-emerald-600', bg: 'bg-emerald-50', accent: 'border-emerald-200' },
             { id: 'REVENUE' as const, icon: TrendingUp, value: `$${monthRevenue.toLocaleString()}`, label: 'Ingresos totales', color: 'text-neutral-700', bg: 'bg-neutral-100', accent: 'border-neutral-200' },
           ].map((s) => {
@@ -512,13 +512,13 @@ export default function DoctorDashboardPage() {
         ) : (
           <div className="flex flex-col gap-10">
 
-            {/* 1. Pending requests (Visible on ALL or PENDING filter) */}
+            {/* 1. Espera por Atender (Visible on ALL or PENDING filter) */}
             {(activeFilter === 'ALL' || activeFilter === 'PENDING') && (
               <section className="print:hidden">
                 <div className="mb-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                    <h2 className="text-base font-semibold text-neutral-900">Solicitudes Pendientes</h2>
+                    <h2 className="text-base font-semibold text-neutral-900">Citas en Espera por Atender</h2>
                     <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
                       {pending.length} nueva{pending.length !== 1 ? 's' : ''}
                     </span>
@@ -527,7 +527,7 @@ export default function DoctorDashboardPage() {
                 {pending.length === 0 ? (
                   <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-8 text-center">
                     <Clock className="h-8 w-8 text-amber-400 mb-2" />
-                    <p className="text-sm font-medium text-neutral-600">No hay solicitudes de citas pendientes por confirmar</p>
+                    <p className="text-sm font-medium text-neutral-600">No hay solicitudes de citas en espera por atender</p>
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -547,12 +547,12 @@ export default function DoctorDashboardPage() {
               </section>
             )}
 
-            {/* 2. Confirmed agenda (Visible on ALL or CONFIRMED filter) */}
+            {/* 2. Citas en Atención (Visible on ALL or CONFIRMED filter) */}
             {(activeFilter === 'ALL' || activeFilter === 'CONFIRMED') && (
               <section className="print:hidden">
                 <div className="mb-5 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-500" />
-                  <h2 className="text-base font-semibold text-neutral-900">Agenda Confirmada</h2>
+                  <h2 className="text-base font-semibold text-neutral-900">Citas En Atención</h2>
                   <span className="rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
                     {confirmed.length} activa{confirmed.length !== 1 ? 's' : ''}
                   </span>
@@ -562,8 +562,8 @@ export default function DoctorDashboardPage() {
                     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50">
                       <Heart className="h-6 w-6 text-primary-400 fill-primary-200" />
                     </div>
-                    <p className="text-sm font-medium text-neutral-600">No hay citas confirmadas pendientes</p>
-                    <p className="mt-1 text-xs text-neutral-400">Revisa las solicitudes de arriba para confirmarlas</p>
+                    <p className="text-sm font-medium text-neutral-600">No hay citas en atención pendientes</p>
+                    <p className="mt-1 text-xs text-neutral-400">Revisa las solicitudes de arriba para ponerlas en atención</p>
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
