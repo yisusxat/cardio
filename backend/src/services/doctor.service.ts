@@ -54,7 +54,6 @@ const DOCTOR_INCLUDE = {
   },
   schedules: { orderBy: { dayOfWeek: 'asc' as const } },
   services: {
-    where: { isActive: true },
     orderBy: { name: 'asc' as const },
   },
 } as const;
