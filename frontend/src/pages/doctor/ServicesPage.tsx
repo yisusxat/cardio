@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { Trash2, Plus, Stethoscope, ArrowLeft, DollarSign, Pencil, Power, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Trash2, Plus, Stethoscope, ArrowLeft, DollarSign, Pencil, Power, CheckCircle2, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageLayout from '../../components/layout/PageLayout';
 import Button from '../../components/ui/Button';
@@ -26,10 +26,22 @@ export default function DoctorServicesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+
+  // Fetch fresh data when entering page
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    await fetchMe();
+    setRefreshing(false);
+  };
 
   const services = (user?.doctorProfile?.services as MedicalServiceItem[]) ?? [];
   const activeCount = services.filter((s) => s.isActive).length;
@@ -111,10 +123,10 @@ export default function DoctorServicesPage() {
     setTogglingId(id);
     try {
       await api.delete(`/doctors/services/${id}`);
-      toast.success('Servicio eliminado (las citas agendadas previas se respetan)');
+      toast.success('Servicio desactivado correctamente (permanece en la lista)');
       await fetchMe();
     } catch {
-      toast.error('Error al eliminar el servicio');
+      toast.error('Error al desactivar el servicio');
     } finally {
       setTogglingId(null);
     }
@@ -139,15 +151,27 @@ export default function DoctorServicesPage() {
                 {activeCount} activo{activeCount !== 1 ? 's' : ''} de {services.length} servicio{services.length !== 1 ? 's' : ''} registrados
               </p>
             </div>
-            <button
-              onClick={handleOpenCreateModal}
-              className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
-              style={{ background: 'linear-gradient(135deg, #be123c, #e11d48)', boxShadow: '0 6px 20px -4px rgba(225,29,72,0.4)' }}
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Nuevo Servicio</span>
-              <span className="sm:hidden">Añadir</span>
-            </button>
+            
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                disabled={refreshing}
+                className="p-2.5 rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 transition-colors"
+                title="Actualizar listado de servicios"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+              <button
+                onClick={handleOpenCreateModal}
+                className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(135deg, #be123c, #e11d48)', boxShadow: '0 6px 20px -4px rgba(225,29,72,0.4)' }}
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Nuevo Servicio</span>
+                <span className="sm:hidden">Añadir</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -155,7 +179,7 @@ export default function DoctorServicesPage() {
         <div className="mb-6 flex items-center gap-2 rounded-2xl bg-amber-50 p-4 border border-amber-200 text-xs text-amber-900">
           <ShieldCheck className="h-4 w-4 text-amber-600 flex-shrink-0" />
           <span>
-            <strong>Garantía de Tarifas Agendadas:</strong> Modificar, desactivar o reactivar un servicio aplicará solo para nuevas reservas de pacientes. Cualquier cita reservada previamente conservará su servicio y precio intactos.
+            <strong>Garantía de Tarifas y Citas:</strong> Los servicios desactivados no desaparecen de tu panel; se mantienen visibles con la etiqueta <strong>Desactivado</strong> para que puedas reactivarlos cuando desees. Todas las citas previas mantendrán su precio contratado.
           </span>
         </div>
 
@@ -181,40 +205,42 @@ export default function DoctorServicesPage() {
             {services.map((s) => (
               <div
                 key={s.id}
-                className={`group flex flex-col rounded-2xl border bg-white overflow-hidden transition-all duration-200 hover:border-neutral-200 hover:-translate-y-0.5 ${
-                  !s.isActive ? 'border-neutral-200/60 opacity-80 bg-neutral-50/50' : 'border-neutral-100'
+                className={`group flex flex-col rounded-2xl border bg-white overflow-hidden transition-all duration-200 hover:border-neutral-200 ${
+                  !s.isActive ? 'border-neutral-200 bg-neutral-50/70 opacity-90' : 'border-neutral-100'
                 }`}
                 style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.07)' }}
               >
                 {/* Top accent */}
-                <div className="h-1 bg-gradient-to-r from-primary-500 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className={`h-1 bg-gradient-to-r ${s.isActive ? 'from-primary-500 to-primary-700' : 'from-neutral-300 to-neutral-400'} opacity-100 transition-opacity duration-300`} />
 
                 <div className="flex flex-1 flex-col p-5">
                   <div className="mb-3 flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-50">
-                        <Stethoscope className="h-5 w-5 text-primary-600" />
+                      <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${s.isActive ? 'bg-primary-50' : 'bg-neutral-100'}`}>
+                        <Stethoscope className={`h-5 w-5 ${s.isActive ? 'text-primary-600' : 'text-neutral-400'}`} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className={`text-sm font-semibold ${s.isActive ? 'text-neutral-900' : 'text-neutral-400 line-through'}`}>
+                          <h3 className={`text-sm font-semibold ${s.isActive ? 'text-neutral-900' : 'text-neutral-500 line-through'}`}>
                             {s.name}
                           </h3>
                         </div>
                         <span
-                          className={`inline-block mt-0.5 rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                          className={`inline-block mt-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
                             s.isActive
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-neutral-200 text-neutral-600'
+                              : 'bg-neutral-200 text-neutral-700 border border-neutral-300'
                           }`}
                         >
                           {s.isActive ? 'Activo' : 'Desactivado'}
                         </span>
                       </div>
                     </div>
-                    <div className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-primary-50 px-3 py-1.5">
-                      <DollarSign className="h-3.5 w-3.5 text-primary-600" />
-                      <span className="text-sm font-bold text-primary-700">{formatPrice(Number(s.price))}</span>
+                    <div className={`flex flex-shrink-0 items-center gap-1 rounded-xl px-3 py-1.5 ${s.isActive ? 'bg-primary-50' : 'bg-neutral-100'}`}>
+                      <DollarSign className={`h-3.5 w-3.5 ${s.isActive ? 'text-primary-600' : 'text-neutral-400'}`} />
+                      <span className={`text-sm font-bold ${s.isActive ? 'text-primary-700' : 'text-neutral-600'}`}>
+                        {formatPrice(Number(s.price))}
+                      </span>
                     </div>
                   </div>
 
@@ -229,14 +255,14 @@ export default function DoctorServicesPage() {
                     type="button"
                     disabled={togglingId === s.id}
                     onClick={() => handleToggleActive(s)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold border transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border transition-all ${
                       s.isActive
-                        ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                        : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                        ? 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 shadow-sm'
+                        : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 shadow-sm'
                     }`}
                   >
                     <Power className="h-3.5 w-3.5" />
-                    {s.isActive ? 'Desactivar' : 'Activar'}
+                    {s.isActive ? 'Desactivar' : 'Activar Servicio'}
                   </button>
 
                   <div className="flex items-center gap-2">
@@ -252,7 +278,7 @@ export default function DoctorServicesPage() {
                       disabled={togglingId === s.id}
                       onClick={() => handleDelete(s.id)}
                       className="p-1 text-neutral-400 hover:text-rose-600 transition-colors"
-                      title="Eliminar servicio"
+                      title="Desactivar este servicio"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

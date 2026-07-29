@@ -28,6 +28,11 @@ export default function DoctorProfilePage() {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
 
+  // Fetch fresh profile data on mount
+  useEffect(() => {
+    fetchMe();
+  }, [fetchMe]);
+
   // Synchronize state dynamically when doctorProfile is fetched or updated
   useEffect(() => {
     if (doctorProfile) {
