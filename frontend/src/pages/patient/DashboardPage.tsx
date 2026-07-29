@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar, Clock, CheckCircle, Plus, ArrowRight,
-  Heart, Activity, User, ShieldAlert,
+  Heart, Activity, User,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
