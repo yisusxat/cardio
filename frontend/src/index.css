@@ -92,7 +92,7 @@
     @apply block w-full rounded-xl border border-neutral-200 bg-white px-4 py-3
            text-sm text-neutral-900 placeholder-neutral-400
            shadow-sm transition-all duration-200
-           focus:border-primary-400 focus:outline-none focus:ring-3 focus:ring-primary-500/15
+           focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500/15
            hover:border-neutral-300;
   }
 
