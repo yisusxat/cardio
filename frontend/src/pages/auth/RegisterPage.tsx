@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/use-auth';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import ToastContainer from '../../components/ui/Toast';
+import api from '../../lib/api';
 
 const BENEFITS = [
   'Acceso a 12+ cardiólogos especializados',
@@ -21,6 +22,7 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -45,6 +47,12 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
       });
+      // If phone provided, save patient profile after registration
+      if (form.phone) {
+        try {
+          await api.put('/patients/profile', { phone: form.phone });
+        } catch { /* non-critical */ }
+      }
       navigate('/patient/dashboard');
     } catch {
       // error shown via store
@@ -179,6 +187,15 @@ export default function RegisterPage() {
               onChange={set('email')}
               required
               id="reg-email"
+            />
+            <Input
+              label="Teléfono (opcional)"
+              type="tel"
+              placeholder="+58 414 000 0000"
+              value={form.phone}
+              onChange={set('phone')}
+              id="reg-phone"
+              hint="Para confirmaciones y recordatorios"
             />
             <Input
               label="Contraseña"

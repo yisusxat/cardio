@@ -3,6 +3,28 @@ import { persist } from 'zustand/middleware';
 import api from '../lib/api';
 import { getApiErrorMessage } from '../lib/utils';
 
+export type Gender = 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+export type BloodType = 'A_POS' | 'A_NEG' | 'B_POS' | 'B_NEG' | 'AB_POS' | 'AB_NEG' | 'O_POS' | 'O_NEG';
+export type AlcoholConsumption = 'NONE' | 'OCCASIONAL' | 'MODERATE' | 'HEAVY';
+
+export interface PatientProfile {
+  id: string;
+  userId: string;
+  phone?: string | null;
+  dateOfBirth?: string | null;
+  gender?: Gender | null;
+  bloodType?: BloodType | null;
+  weightKg?: number | null;
+  heightCm?: number | null;
+  allergies?: string | null;
+  chronicConditions?: string | null;
+  currentMedications?: string | null;
+  smoker?: boolean | null;
+  alcoholConsumption?: AlcoholConsumption | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+}
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -18,6 +40,7 @@ export interface AuthUser {
     schedules: unknown[];
     services: unknown[];
   } | null;
+  patientProfile?: PatientProfile | null;
 }
 
 interface AuthState {

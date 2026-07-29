@@ -103,6 +103,7 @@ export const authService = {
             services: { orderBy: { name: 'asc' } },
           },
         },
+        patientProfile: true,
       },
     });
     if (!user) throw new NotFoundError('User');
