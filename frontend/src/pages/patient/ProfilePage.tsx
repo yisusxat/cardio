@@ -21,63 +21,48 @@ export default function PatientProfilePage() {
 
         {/* Profile card */}
         <div
-          className="mb-6 rounded-3xl border border-neutral-100 bg-white overflow-hidden"
+          className="mb-6 rounded-3xl border border-neutral-100 bg-white p-8"
           style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.08)' }}
         >
-          {/* Hero band */}
-          <div
-            className="h-28 relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #9f1239 0%, #e11d48 50%, #f43f5e 100%)' }}
-          >
-            {/* Ambient light glow */}
-            <div
-              className="pointer-events-none absolute inset-0 opacity-40"
-              style={{
-                backgroundImage: 'radial-gradient(ellipse 60% 80% at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 70%)',
-              }}
-            />
-            {/* Subtle dot pattern */}
-            <div
-              className="pointer-events-none absolute inset-0 opacity-15"
-              style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}
-            />
-          </div>
-
-          {/* Avatar + info */}
-          <div className="px-8 pb-8">
-            <div className="-mt-10 mb-5 flex items-end justify-between">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-6">
+              {/* Avatar Prominente */}
               <div
-                className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white text-2xl font-bold text-white shadow-lg"
+                className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl text-2xl font-bold text-white shadow-red-glow"
                 style={{ background: 'linear-gradient(135deg, #e11d48, #9f1239)' }}
               >
                 {initials}
               </div>
-              <span className="mb-1 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
-                Paciente Verificado
-              </span>
-            </div>
 
-            <h1 className="font-display text-2xl font-semibold text-neutral-900">
-              {user?.firstName} {user?.lastName}
-            </h1>
-            <p className="mt-1 text-sm text-neutral-400">Miembro de CardioCenter</p>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {[
-                { icon: User, label: 'Nombre completo', value: `${user?.firstName ?? ''} ${user?.lastName ?? ''}` },
-                { icon: Mail, label: 'Correo electrónico', value: user?.email ?? '—' },
-                { icon: Shield, label: 'Rol', value: 'Paciente' },
-                { icon: Heart, label: 'Estado de cuenta', value: 'Activa' },
-              ].map((f) => (
-                <div key={f.label} className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <f.icon className="h-3.5 w-3.5 text-neutral-400" />
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{f.label}</span>
-                  </div>
-                  <p className="text-sm font-semibold text-neutral-800">{f.value}</p>
+              <div>
+                <div className="mb-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">
+                    <Shield className="h-3.5 w-3.5" /> Paciente Verificado
+                  </span>
                 </div>
-              ))}
+                <h1 className="font-display text-2xl font-semibold text-neutral-900 sm:text-3xl">
+                  {user?.firstName} {user?.lastName}
+                </h1>
+                <p className="mt-1 text-sm text-neutral-400">Miembro de CardioCenter</p>
+              </div>
             </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 border-t border-neutral-100 pt-6">
+            {[
+              { icon: User, label: 'Nombre completo', value: `${user?.firstName ?? ''} ${user?.lastName ?? ''}` },
+              { icon: Mail, label: 'Correo electrónico', value: user?.email ?? '—' },
+              { icon: Shield, label: 'Rol de usuario', value: 'Paciente' },
+              { icon: Heart, label: 'Estado de cuenta', value: 'Activa' },
+            ].map((f) => (
+              <div key={f.label} className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <f.icon className="h-3.5 w-3.5 text-neutral-400" />
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{f.label}</span>
+                </div>
+                <p className="text-sm font-semibold text-neutral-800">{f.value}</p>
+              </div>
+            ))}
           </div>
         </div>
 
