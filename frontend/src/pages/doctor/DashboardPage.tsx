@@ -154,7 +154,17 @@ export default function DoctorDashboardPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 print:p-0">
 
         {/* ── Executive Printable PDF Template (ONLY visible on print) ── */}
-        <div className="hidden print:block font-sans text-neutral-900 leading-normal">
+        <div className="hidden print:block font-sans text-neutral-900 leading-normal relative">
+
+          {/* Marca de Agua Antifalsificación repetida en cada página */}
+          <div className="watermark-container">
+            <div className="watermark-text">
+              <div className="text-6xl mb-1 opacity-40">❤️ CARDIOCENTER</div>
+              <div>DOCUMENTO OFICIAL AUTÉNTICO</div>
+              <div className="text-lg font-bold tracking-normal opacity-80 mt-1">PROHIBIDA SU ALTERACIÓN O COPIA NO AUTORIZADA</div>
+              <div className="text-xs font-mono tracking-widest mt-1 opacity-60">REGISTRO AUDITADO EN SISTEMA</div>
+            </div>
+          </div>
           {/* Header Membrete */}
           <div className="flex items-center justify-between border-b-2 border-neutral-900 pb-4 mb-6">
             <div className="flex items-center gap-3">
