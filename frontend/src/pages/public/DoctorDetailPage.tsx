@@ -4,7 +4,6 @@ import { ArrowLeft, Clock, DollarSign, Calendar, CheckCircle2 } from 'lucide-rea
 import PageLayout from '../../components/layout/PageLayout';
 import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
 import BookingWizard from '../../components/appointments/BookingWizard';
 import Spinner from '../../components/ui/Spinner';
 import { formatPrice, getDayName, getInitials } from '../../lib/utils';
