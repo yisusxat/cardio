@@ -6,7 +6,7 @@ export default defineComputeConfig({
     framework: "custom",
     httpPort: 4000,
     build: {
-      command: "prisma generate --schema=backend/prisma/schema.prisma && npm run build -w backend && npm run build -w frontend",
+      command: "prisma generate --schema=backend/prisma/schema.prisma && npm run build -w backend && npm run build -w frontend && cp -r frontend/dist backend/dist/frontend/dist",
       outputDirectory: "backend/dist",
       entrypoint: "server.js",
     },
