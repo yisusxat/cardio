@@ -1,13 +1,16 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Stethoscope, User, Mail, DollarSign, CheckCircle, Shield } from 'lucide-react';
+import {
+  ArrowLeft, Stethoscope, User, Mail, DollarSign, CheckCircle, Shield,
+  Clock, Plus, Settings, Eye,
+} from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import api from '../../lib/api';
 import { useAuth } from '../../hooks/use-auth';
 import { useUIStore } from '../../stores/ui.store';
-import { formatPrice } from '../../lib/utils';
+import { formatPrice, getDayName } from '../../lib/utils';
 
 export default function DoctorProfilePage() {
   const { user, fetchMe } = useAuth();
@@ -15,12 +18,38 @@ export default function DoctorProfilePage() {
 
   const doctorProfile = user?.doctorProfile;
 
-  const [specialty, setSpecialty] = useState(doctorProfile?.specialty ?? '');
-  const [bio, setBio] = useState(doctorProfile?.bio ?? '');
-  const [basePrice, setBasePrice] = useState(String(doctorProfile?.basePrice ?? ''));
+  const [specialty, setSpecialty] = useState('');
+  const [bio, setBio] = useState('');
+  const [basePrice, setBasePrice] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Synchronize state dynamically when doctorProfile is fetched or updated
+  useEffect(() => {
+    if (doctorProfile) {
+      setSpecialty(doctorProfile.specialty ?? '');
+      setBio(doctorProfile.bio ?? '');
+      setBasePrice(doctorProfile.basePrice !== undefined ? String(doctorProfile.basePrice) : '');
+    }
+  }, [doctorProfile]);
+
   const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
+
+  const schedules = (doctorProfile?.schedules as {
+    id: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }[]) ?? [];
+
+  const services = (doctorProfile?.services as {
+    id: string;
+    name: string;
+    description?: string | null;
+    price: number;
+    isActive: boolean;
+  }[]) ?? [];
+
+  const activeServices = services.filter((s) => s.isActive);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -44,15 +73,26 @@ export default function DoctorProfilePage() {
 
   return (
     <PageLayout>
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
-        {/* Back */}
-        <Link
-          to="/doctor/dashboard"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-400 hover:text-neutral-600 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" /> Volver al Portal Médico
-        </Link>
+        {/* Back and Preview CTA */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <Link
+            to="/doctor/dashboard"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-400 hover:text-neutral-600 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver al Portal Médico
+          </Link>
+
+          {doctorProfile?.id && (
+            <Link
+              to={`/doctors/${doctorProfile.id}`}
+              className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2 text-xs font-semibold text-primary-700 hover:bg-primary-100 transition-colors"
+            >
+              <Eye className="h-3.5 w-3.5" /> Ver Mi Perfil Público (Vista del Paciente)
+            </Link>
+          )}
+        </div>
 
         {/* Profile Card Header */}
         <div
@@ -61,7 +101,7 @@ export default function DoctorProfilePage() {
         >
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-6">
-              {/* Avatar Prominente */}
+              {/* Avatar */}
               <div
                 className="flex h-24 w-24 flex-shrink-0 items-center justify-center rounded-3xl text-3xl font-bold text-white shadow-red-glow"
                 style={{ background: 'linear-gradient(135deg, #be123c 0%, #e11d48 50%, #f43f5e 100%)' }}
@@ -110,6 +150,81 @@ export default function DoctorProfilePage() {
               <p className="text-xs font-semibold text-primary-600">
                 {doctorProfile?.basePrice ? formatPrice(Number(doctorProfile.basePrice)) : '$0 USD'}
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Coherence Section: Schedules & Services Overview ────────────────────── */}
+        <div className="mb-8 grid gap-6 md:grid-cols-2">
+          {/* Schedules summary */}
+          <div
+            className="rounded-3xl border border-neutral-100 bg-white p-6 flex flex-col justify-between"
+            style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.07)' }}
+          >
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-50">
+                    <Clock className="h-4 w-4 text-primary-600" />
+                  </div>
+                  <h3 className="text-sm font-bold text-neutral-900">Horarios de Atención Configurados</h3>
+                </div>
+                <Link
+                  to="/doctor/schedules"
+                  className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Gestionar
+                </Link>
+              </div>
+
+              {schedules.length === 0 ? (
+                <p className="text-xs text-neutral-400 py-3">No has registrado bloques de disponibilidad.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {schedules.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between text-xs rounded-xl bg-neutral-50 px-3 py-2 border border-neutral-100">
+                      <span className="font-semibold text-neutral-700">{getDayName(s.dayOfWeek)}</span>
+                      <span className="font-mono text-neutral-500">{s.startTime} – {s.endTime}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Services summary */}
+          <div
+            className="rounded-3xl border border-neutral-100 bg-white p-6 flex flex-col justify-between"
+            style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.07)' }}
+          >
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-neutral-100">
+                    <Settings className="h-4 w-4 text-neutral-600" />
+                  </div>
+                  <h3 className="text-sm font-bold text-neutral-900">Servicios Médicos Ofrecidos</h3>
+                </div>
+                <Link
+                  to="/doctor/services"
+                  className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                >
+                  <Plus className="h-3.5 w-3.5" /> Gestionar
+                </Link>
+              </div>
+
+              {activeServices.length === 0 ? (
+                <p className="text-xs text-neutral-400 py-3">No tienes servicios adicionales activos.</p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {activeServices.map((serv) => (
+                    <div key={serv.id} className="flex items-center justify-between text-xs rounded-xl bg-neutral-50 px-3 py-2 border border-neutral-100">
+                      <span className="font-semibold text-neutral-700 truncate max-w-[200px]">{serv.name}</span>
+                      <span className="font-bold text-primary-600">{formatPrice(Number(serv.price))}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
