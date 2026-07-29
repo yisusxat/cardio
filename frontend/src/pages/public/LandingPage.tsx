@@ -240,10 +240,10 @@ export default function LandingPage() {
             {STATS.map((s, i) => (
               <div
                 key={s.label}
-                className="group flex flex-col items-center justify-center rounded-2xl border border-white/70 bg-white p-6 text-center animate-fade-up transition-all duration-300 hover:-translate-y-1 hover:border-primary-100"
+                className="group flex flex-col items-center justify-center rounded-2xl border border-white/80 bg-white/90 backdrop-blur-md p-6 text-center animate-fade-up transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:bg-white"
                 style={{
                   animationDelay: `${i * 80}ms`,
-                  boxShadow: '0 20px 60px -12px rgba(0,0,0,0.18), 0 4px 16px -4px rgba(0,0,0,0.08)',
+                  boxShadow: '0 20px 60px -12px rgba(0,0,0,0.12), 0 4px 16px -4px rgba(0,0,0,0.06)',
                 }}
               >
                 <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 transition-all duration-300 group-hover:bg-primary-600 group-hover:shadow-red-glow">
