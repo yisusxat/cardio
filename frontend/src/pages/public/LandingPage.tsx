@@ -7,6 +7,7 @@ import {
 import PageLayout from '../../components/layout/PageLayout';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import Button from '../../components/ui/Button';
+import HeartbeatWidget from '../../components/ui/HeartbeatWidget';
 import api from '../../lib/api';
 
 const FEATURES = [
@@ -73,70 +74,80 @@ export default function LandingPage() {
         />
 
         <div className="relative mx-auto max-w-7xl px-5 pt-20 pb-32 sm:px-6 lg:px-8 lg:pt-32 lg:pb-40">
-          <div className="max-w-3xl">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:gap-16">
 
-            {/* Badge */}
-            <div className="section-label-dark mb-8 animate-fade-up">
-              <Heart className="h-3.5 w-3.5 text-primary-400 fill-primary-400" />
-              Tu salud cardiovascular, nuestra prioridad
-            </div>
+            {/* ── Left: content ──────────────────────────────── */}
+            <div className="flex-1 max-w-2xl">
 
-            {/* Headline */}
-            <h1 className="animate-fade-up animate-delay-100 font-display font-semibold text-white leading-[1.05] tracking-tight"
-              style={{ fontSize: 'clamp(2.8rem, 6vw, 4.75rem)' }}>
-              Cuidamos{' '}
-              <span
-                className="relative inline-block"
-                style={{
-                  background: 'linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                tu corazón
-              </span>
-              <br />
-              con excelencia
-            </h1>
+              {/* Badge */}
+              <div className="section-label-dark mb-8 animate-fade-up">
+                <Heart className="h-3.5 w-3.5 text-primary-400 fill-primary-400" />
+                Tu salud cardiovascular, nuestra prioridad
+              </div>
 
-            <p className="animate-fade-up animate-delay-200 mt-7 text-lg leading-relaxed text-white/60 max-w-xl">
-              CardioCenter conecta a pacientes con los mejores cardiólogos especialistas.
-              Agenda tu consulta de forma segura, sencilla y rápida.
-            </p>
-
-            {/* CTAs */}
-            <div className="animate-fade-up animate-delay-300 mt-10 flex flex-wrap gap-4">
-              <Link to="/doctors">
-                <button
-                  className="group inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300"
+              {/* Headline */}
+              <h1 className="animate-fade-up animate-delay-100 font-display font-semibold text-white leading-[1.05] tracking-tight"
+                style={{ fontSize: 'clamp(2.4rem, 5vw, 4.25rem)' }}>
+                Cuidamos{' '}
+                <span
+                  className="relative inline-block"
                   style={{
-                    background: 'linear-gradient(135deg, #be123c 0%, #e11d48 50%, #f43f5e 100%)',
-                    boxShadow: '0 8px 32px -4px rgba(225, 29, 72, 0.5)',
+                    background: 'linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 40px -4px rgba(225, 29, 72, 0.7)')}
-                  onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 32px -4px rgba(225, 29, 72, 0.5)')}
                 >
-                  Ver Especialistas
-                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                </button>
-              </Link>
-              <Link to="/register">
-                <button className="btn-outline-white">
-                  Crear cuenta gratis
-                </button>
-              </Link>
+                  tu corazón
+                </span>
+                <br />
+                con excelencia
+              </h1>
+
+              <p className="animate-fade-up animate-delay-200 mt-7 text-lg leading-relaxed text-white/60 max-w-xl">
+                CardioCenter conecta a pacientes con los mejores cardiólogos especialistas.
+                Agenda tu consulta de forma segura, sencilla y rápida.
+              </p>
+
+              {/* CTAs */}
+              <div className="animate-fade-up animate-delay-300 mt-10 flex flex-wrap gap-4">
+                <Link to="/doctors">
+                  <button
+                    className="group inline-flex items-center gap-2.5 rounded-xl px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300"
+                    style={{
+                      background: 'linear-gradient(135deg, #be123c 0%, #e11d48 50%, #f43f5e 100%)',
+                      boxShadow: '0 8px 32px -4px rgba(225, 29, 72, 0.5)',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 40px -4px rgba(225, 29, 72, 0.7)')}
+                    onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 32px -4px rgba(225, 29, 72, 0.5)')}
+                  >
+                    Ver Especialistas
+                    <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                  </button>
+                </Link>
+                <Link to="/register">
+                  <button className="btn-outline-white">
+                    Crear cuenta gratis
+                  </button>
+                </Link>
+              </div>
+
+              {/* Trust indicators */}
+              <div className="animate-fade-up animate-delay-400 mt-12 flex flex-wrap gap-5">
+                {TRUST_ITEMS.map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm text-white/50">
+                    <CheckCircle className="h-4 w-4 text-primary-400 flex-shrink-0" />
+                    {item}
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Floating trust indicators */}
-            <div className="animate-fade-up animate-delay-400 mt-12 flex flex-wrap gap-5">
-              {TRUST_ITEMS.map((item) => (
-                <div key={item} className="flex items-center gap-2 text-sm text-white/50">
-                  <CheckCircle className="h-4 w-4 text-primary-400 flex-shrink-0" />
-                  {item}
-                </div>
-              ))}
+            {/* ── Right: HeartbeatWidget (desktop only) ───────── */}
+            <div className="hidden lg:flex lg:flex-shrink-0 animate-fade-up animate-delay-300">
+              <HeartbeatWidget />
             </div>
+
           </div>
         </div>
       </section>
@@ -198,6 +209,57 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Inspirational Quote Band ─────────────────────────────────────────── */}
+      <section
+        className="relative overflow-hidden py-20"
+        style={{ background: 'linear-gradient(135deg, #1a0008 0%, #3d0018 50%, #5a001e 100%)' }}
+      >
+        {/* Dot grid */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        {/* Glow orb */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            width: '600px', height: '300px',
+            background: 'radial-gradient(ellipse, rgba(225,29,72,0.15) 0%, transparent 70%)',
+          }}
+        />
+
+        <div className="relative mx-auto max-w-4xl px-5 text-center sm:px-6">
+          {/* Mini ECG line */}
+          <div className="mb-8 flex justify-center">
+            <svg viewBox="0 0 200 32" className="w-48 opacity-60" style={{ height: '24px' }}>
+              <path
+                d="M0,16 L40,16 L50,10 L55,16 L65,16 L68,2 L72,30 L76,16 L90,16 L100,10 L106,16 L200,16"
+                stroke="#f43f5e" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+
+          <blockquote
+            className="font-display font-semibold text-white"
+            style={{ fontSize: 'clamp(1.5rem, 3.5vw, 2.25rem)', lineHeight: 1.2 }}
+          >
+            "El corazón que late con propósito
+            <br className="hidden sm:block" />
+            {' '}es el corazón que vive con plenitud."
+          </blockquote>
+
+          <p className="mt-6 text-sm font-medium uppercase tracking-[0.2em] text-primary-400">
+            CardioCenter — Excelencia en Cardiología
+          </p>
+
+          {/* Decorative line */}
+          <div className="mx-auto mt-8 h-px w-16 bg-gradient-to-r from-transparent via-primary-500 to-transparent" />
         </div>
       </section>
 

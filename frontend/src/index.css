@@ -158,3 +158,10 @@
   .animate-delay-300 { animation-delay: 300ms; }
   .animate-delay-400 { animation-delay: 400ms; }
 }
+
+/* ── ECG scroll animation (outside @layer to avoid purge) ──────────────────── */
+@keyframes ecgScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(280px); }
+}
+
