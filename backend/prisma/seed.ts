@@ -1,7 +1,11 @@
-import { PrismaClient, UserRole, AppointmentStatus, PaymentMethod, PaymentStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting seed...');
@@ -24,7 +28,7 @@ async function main() {
       password: await hash('admin1234'),
       firstName: 'Admin',
       lastName: 'Sistema',
-      role: UserRole.ADMIN,
+      role: 'ADMIN',
     },
   });
 
@@ -36,7 +40,7 @@ async function main() {
         password: await hash('patient123'),
         firstName: 'Carlos',
         lastName: 'Mendoza',
-        role: UserRole.PATIENT,
+        role: 'PATIENT',
       },
     }),
     prisma.user.create({
@@ -45,7 +49,7 @@ async function main() {
         password: await hash('patient123'),
         firstName: 'Lucía',
         lastName: 'Fernández',
-        role: UserRole.PATIENT,
+        role: 'PATIENT',
       },
     }),
     prisma.user.create({
@@ -54,7 +58,7 @@ async function main() {
         password: await hash('patient123'),
         firstName: 'Roberto',
         lastName: 'Silva',
-        role: UserRole.PATIENT,
+        role: 'PATIENT',
       },
     }),
   ]);
@@ -118,7 +122,7 @@ async function main() {
     },
   ];
 
-  const doctors: { id: string; services: { id: string }[] }[] = [];
+  const doctors: { id: string; services: { id: string; price: any }[] }[] = [];
 
   for (const d of doctorData) {
     const userDoc = await prisma.user.create({
@@ -127,7 +131,7 @@ async function main() {
         password: await hash('doctor123'),
         firstName: d.firstName,
         lastName: d.lastName,
-        role: UserRole.DOCTOR,
+        role: 'DOCTOR',
       },
     });
 
@@ -155,7 +159,7 @@ async function main() {
   };
 
   // Patient 0 appointments with doctor 0
-  const appt1 = await prisma.appointment.create({
+  await prisma.appointment.create({
     data: {
       patientId: patients[0].id,
       doctorId: doctors[0].id,
@@ -163,7 +167,7 @@ async function main() {
       startTime: '09:00',
       endTime: '09:30',
       reason: 'Control anual de presión arterial',
-      status: AppointmentStatus.CONFIRMED,
+      status: 'CONFIRMED',
       totalAmount: 150,
     },
   });
@@ -176,12 +180,12 @@ async function main() {
       startTime: '10:00',
       endTime: '10:30',
       reason: 'Dolor en el pecho',
-      status: AppointmentStatus.COMPLETED,
+      status: 'COMPLETED',
       totalAmount: 430,
       services: {
         create: [
-          { serviceId: doctors[0].services[0].id, priceAtTime: 150 },
-          { serviceId: doctors[0].services[1].id, priceAtTime: 280 },
+          { serviceId: doctors[0].services[0].id, priceAtTime: doctors[0].services[0].price },
+          { serviceId: doctors[0].services[1].id, priceAtTime: doctors[0].services[1].price },
         ],
       },
     },
@@ -192,8 +196,8 @@ async function main() {
     data: {
       appointmentId: appt2.id,
       amount: 430,
-      method: PaymentMethod.CARD,
-      status: PaymentStatus.PAID,
+      method: 'CARD',
+      status: 'PAID',
     },
   });
 
@@ -206,7 +210,7 @@ async function main() {
       startTime: '10:00',
       endTime: '10:30',
       reason: 'Palpitaciones frecuentes',
-      status: AppointmentStatus.PENDING,
+      status: 'PENDING',
       totalAmount: 180,
     },
   });
@@ -220,7 +224,7 @@ async function main() {
       startTime: '15:00',
       endTime: '15:30',
       reason: 'Chequeo preventivo, antecedentes familiares',
-      status: AppointmentStatus.CONFIRMED,
+      status: 'CONFIRMED',
       totalAmount: 120,
     },
   });
