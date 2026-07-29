@@ -13,7 +13,7 @@ interface Doctor {
   basePrice: number;
   user: { firstName: string; lastName: string };
   schedules: { dayOfWeek: number }[];
-  services: { id: string; name: string; price: number }[];
+  services: { id: string; name: string; price: number; isActive?: boolean }[];
 }
 
 export default function DoctorsPage() {

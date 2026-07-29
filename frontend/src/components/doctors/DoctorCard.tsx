@@ -14,7 +14,7 @@ interface DoctorCardProps {
       lastName: string;
     };
     schedules: { dayOfWeek: number }[];
-    services: { id: string; name: string; price: number | string }[];
+    services: { id: string; name: string; price: number | string; isActive?: boolean }[];
   };
 }
 
@@ -23,6 +23,11 @@ const DAY_ABBR = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 export default function DoctorCard({ doctor }: DoctorCardProps) {
   const name = `${doctor.user.firstName} ${doctor.user.lastName}`;
   const initials = getInitials(doctor.user.firstName, doctor.user.lastName);
+
+  // Filter ONLY active services for public display
+  const activeServices = doctor.services.filter((s) => s.isActive !== false);
+
+  // Days of week configured
   const days = [...new Set(doctor.schedules.map((s) => s.dayOfWeek))].sort();
 
   return (
@@ -66,7 +71,9 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
               <h3 className="truncate font-semibold text-neutral-900 transition-colors duration-200 group-hover:text-primary-700">
                 Dr(a). {name}
               </h3>
-              <Badge variant="primary" className="mt-1.5">{doctor.specialty}</Badge>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                <Badge variant="primary">{doctor.specialty}</Badge>
+              </div>
             </div>
           </div>
           {/* Arrow indicator */}
@@ -78,31 +85,35 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
           <p className="mt-4 text-sm text-neutral-500 line-clamp-2 leading-relaxed">{doctor.bio}</p>
         )}
 
-        {/* Services */}
-        {doctor.services.length > 0 && (
+        {/* Active Services Only */}
+        {activeServices.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1.5">
-            {doctor.services.slice(0, 3).map((s) => (
+            {activeServices.slice(0, 3).map((s) => (
               <span
                 key={s.id}
-                className="rounded-lg bg-primary-50/60 px-2.5 py-0.5 text-xs font-medium text-primary-700"
+                className="rounded-lg bg-primary-50/60 border border-primary-100/80 px-2.5 py-0.5 text-xs font-medium text-primary-700"
               >
                 {s.name}
               </span>
             ))}
-            {doctor.services.length > 3 && (
-              <span className="rounded-lg bg-primary-50/60 px-2.5 py-0.5 text-xs text-primary-400">
-                +{doctor.services.length - 3} más
+            {activeServices.length > 3 && (
+              <span className="rounded-lg bg-primary-50/60 px-2.5 py-0.5 text-xs font-semibold text-primary-600">
+                +{activeServices.length - 3} más
               </span>
             )}
           </div>
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer: Schedules & Price */}
       <div className="flex items-center justify-between border-t border-primary-50 bg-primary-50/40 px-6 py-3.5 transition-colors duration-200 group-hover:bg-primary-50">
-        <div className="flex items-center gap-1.5 text-xs text-neutral-400">
-          <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-          <span>{days.length > 0 ? days.map((d) => DAY_ABBR[d]).join(', ') : 'Sin horario'}</span>
+        <div className="flex items-center gap-1.5 text-xs text-neutral-600 font-medium">
+          <Clock className="h-3.5 w-3.5 flex-shrink-0 text-primary-600" />
+          <span>
+            {days.length > 0
+              ? days.map((d) => DAY_ABBR[d]).join(', ')
+              : 'Consultar horarios'}
+          </span>
         </div>
         <span className="text-sm font-bold text-primary-600">
           Desde {formatPrice(Number(doctor.basePrice))}
