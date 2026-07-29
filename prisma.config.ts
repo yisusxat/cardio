@@ -7,6 +7,6 @@ export default defineConfig({
     filePath: "backend/prisma/schema.prisma",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: process.env.DATABASE_URL || "postgres://postgres:postgres@localhost:5432/postgres",
   },
 });
