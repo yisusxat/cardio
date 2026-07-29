@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Calendar, Clock, Users, Settings, CheckCircle,
-  ArrowRight, TrendingUp, Heart,
+  Calendar, Clock, CheckCircle, Users, ArrowRight,
+  Heart, User, Settings, TrendingUp,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
@@ -78,7 +78,13 @@ export default function DoctorDashboardPage() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2.5">
+            <Link to="/doctor/profile">
+              <button className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-200"
+                style={{ boxShadow: '0 2px 8px -2px rgba(0,0,0,0.06)' }}>
+                <User className="h-4 w-4" /> Mi Perfil
+              </button>
+            </Link>
             <Link to="/doctor/schedules">
               <button className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-200"
                 style={{ boxShadow: '0 2px 8px -2px rgba(0,0,0,0.06)' }}>

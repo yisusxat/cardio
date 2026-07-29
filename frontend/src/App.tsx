@@ -18,6 +18,7 @@ import PatientProfilePage from './pages/patient/ProfilePage';
 import DoctorDashboardPage from './pages/doctor/DashboardPage';
 import DoctorSchedulesPage from './pages/doctor/SchedulesPage';
 import DoctorServicesPage from './pages/doctor/ServicesPage';
+import DoctorProfilePage from './pages/doctor/ProfilePage';
 
 function ProtectedRoute({
   children,
@@ -97,6 +98,14 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={['DOCTOR']}>
             <DoctorServicesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/doctor/profile"
+        element={
+          <ProtectedRoute allowedRoles={['DOCTOR']}>
+            <DoctorProfilePage />
           </ProtectedRoute>
         }
       />
