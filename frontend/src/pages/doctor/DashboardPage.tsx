@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar, Clock, CheckCircle, Users, ArrowRight,
   Heart, Settings, TrendingUp, DollarSign, RotateCcw,
+  Printer, Download, ArrowUpDown, Receipt,
 } from "lucide-react";
 import PageLayout from "../../components/layout/PageLayout";
 import AppointmentCard, { Appointment } from "../../components/appointments/AppointmentCard";
@@ -15,6 +16,8 @@ import { useUIStore } from "../../stores/ui.store";
 import { formatDate, formatPrice, getPatientCode } from "../../lib/utils";
 
 type FilterType = "ALL" | "PENDING" | "CONFIRMED" | "COMPLETED" | "REVENUE";
+type TimePeriod = "ALL" | "THIS_MONTH" | "LAST_MONTH" | "THIS_YEAR";
+type SortOrder = "DATE_DESC" | "DATE_ASC" | "AMOUNT_DESC" | "AMOUNT_ASC";
 
 export default function DoctorDashboardPage() {
   const { user } = useAuth();
@@ -28,6 +31,10 @@ export default function DoctorDashboardPage() {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
   const [savedAdmins, setSavedAdmins] = useState<Record<string, boolean>>({});
+
+  // Revenue Report Controls
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("ALL");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("DATE_DESC");
 
   const fetchAppointments = async () => {
     try {
@@ -66,12 +73,102 @@ export default function DoctorDashboardPage() {
     setActiveFilter((prev) => (prev === type ? "ALL" : type));
   };
 
+  // Filtered & Sorted Revenue Appointments
+  const filteredRevenue = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    let list = completed.filter((a) => {
+      const d = new Date(a.date);
+      if (timePeriod === "THIS_MONTH") {
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+      }
+      if (timePeriod === "LAST_MONTH") {
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+        return d.getFullYear() === lastMonthYear && d.getMonth() === lastMonth;
+      }
+      if (timePeriod === "THIS_YEAR") {
+        return d.getFullYear() === currentYear;
+      }
+      return true;
+    });
+
+    return list.sort((a, b) => {
+      if (sortOrder === "DATE_DESC") return new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (sortOrder === "DATE_ASC") return new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (sortOrder === "AMOUNT_DESC") return Number(b.totalAmount) - Number(a.totalAmount);
+      if (sortOrder === "AMOUNT_ASC") return Number(a.totalAmount) - Number(b.totalAmount);
+      return 0;
+    });
+  }, [completed, timePeriod, sortOrder]);
+
+  const filteredTotal = useMemo(() => {
+    return filteredRevenue.reduce((s, a) => s + Number(a.totalAmount ?? 0), 0);
+  }, [filteredRevenue]);
+
+  const averageTicket = useMemo(() => {
+    if (filteredRevenue.length === 0) return 0;
+    return filteredTotal / filteredRevenue.length;
+  }, [filteredRevenue, filteredTotal]);
+
+  // Export Revenue Report to CSV
+  const exportCSV = () => {
+    if (filteredRevenue.length === 0) {
+      toast.error("No hay registros para exportar");
+      return;
+    }
+    const headers = ["Fecha", "Hora", "ID Paciente", "Nombre Paciente", "Monto (USD)", "Estado"];
+    const rows = filteredRevenue.map((a) => {
+      const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente";
+      const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
+      return [
+        a.date.split("T")[0],
+        a.startTime,
+        pCode,
+        `"${pName}"`,
+        Number(a.totalAmount).toFixed(2),
+        "Cobrado",
+      ];
+    });
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Reporte_Ingresos_Dr_${user?.lastName ?? "Medico"}_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Reporte CSV descargado exitosamente");
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
+
   return (
     <PageLayout>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 print:p-0">
 
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="mb-8 flex items-center justify-between">
+        {/* ── Printable Report Header (Only visible on print) ── */}
+        <div className="hidden print:block mb-8">
+          <div className="border-b-2 border-neutral-900 pb-4 mb-4">
+            <h1 className="text-xl font-bold uppercase tracking-wider text-neutral-900">CardioCenter — Informe Oficial de Ingresos y Facturación</h1>
+            <p className="text-sm font-semibold text-neutral-700">Dr(a). {user?.firstName} {user?.lastName}</p>
+            <p className="text-xs text-neutral-500">Fecha de emisión: {formatDate(new Date().toISOString())}</p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 bg-neutral-100 p-4 rounded-lg mb-6 text-xs font-semibold">
+            <div>Total Ingresos: <span className="font-mono font-bold text-neutral-900">${filteredTotal.toFixed(2)} USD</span></div>
+            <div>Consultas Atendidas: <span className="font-bold text-neutral-900">{filteredRevenue.length}</span></div>
+            <div>Promedio por Cita: <span className="font-mono font-bold text-neutral-900">${averageTicket.toFixed(2)} USD</span></div>
+          </div>
+        </div>
+
+        {/* ── Screen Header (Hidden on print) ─────────────────────────────────── */}
+        <div className="mb-8 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-4">
             <div
               className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-md"
@@ -99,8 +196,8 @@ export default function DoctorDashboardPage() {
           )}
         </div>
 
-        {/* ── Interactive KPI Filter Cards ───────────────────────── */}
-        <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {/* ── Interactive KPI Filter Cards (Hidden on print) ───────────────────────── */}
+        <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4 print:hidden">
           {[
             { id: "PENDING" as const, icon: Clock, value: pending.length, label: "Por confirmar", color: "text-amber-600", bg: "bg-amber-50", accent: "border-amber-200" },
             { id: "CONFIRMED" as const, icon: Calendar, value: confirmed.length, label: "Confirmadas", color: "text-primary-600", bg: "bg-primary-50", accent: "border-primary-200" },
@@ -144,7 +241,7 @@ export default function DoctorDashboardPage() {
 
         {/* ── Content ────────────────────────────────────────────────────── */}
         {loading ? (
-          <div className="flex justify-center py-16">
+          <div className="flex justify-center py-16 print:hidden">
             <Spinner size="lg" className="text-primary-600" />
           </div>
         ) : (
@@ -152,7 +249,7 @@ export default function DoctorDashboardPage() {
 
             {/* 1. Pending requests (Visible on ALL or PENDING filter) */}
             {(activeFilter === "ALL" || activeFilter === "PENDING") && (
-              <section>
+              <section className="print:hidden">
                 <div className="mb-5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
@@ -187,7 +284,7 @@ export default function DoctorDashboardPage() {
 
             {/* 2. Confirmed agenda (Visible on ALL or CONFIRMED filter) */}
             {(activeFilter === "ALL" || activeFilter === "CONFIRMED") && (
-              <section>
+              <section className="print:hidden">
                 <div className="mb-5 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-primary-500" />
                   <h2 className="text-base font-semibold text-neutral-900">Agenda Confirmada</h2>
@@ -226,7 +323,7 @@ export default function DoctorDashboardPage() {
 
             {/* 3. Completed patients history (Visible on COMPLETED filter) */}
             {activeFilter === "COMPLETED" && (
-              <section className="animate-fade-in">
+              <section className="animate-fade-in print:hidden">
                 <div className="mb-5 flex items-center gap-2">
                   <Users className="h-4 w-4 text-emerald-600" />
                   <h2 className="text-base font-semibold text-neutral-900">Historial de Pacientes Atendidos</h2>
@@ -256,32 +353,111 @@ export default function DoctorDashboardPage() {
               </section>
             )}
 
-            {/* 4. Revenue breakdown (Visible on REVENUE filter) */}
+            {/* 4. Revenue breakdown & Report Controls (Visible on REVENUE filter) */}
             {activeFilter === "REVENUE" && (
               <section className="animate-fade-in">
-                <div className="mb-5 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-emerald-600" />
-                    <h2 className="text-base font-semibold text-neutral-900">Desglose de Ingresos y Facturación</h2>
+
+                {/* Controls & Toolbar (Hidden on print) */}
+                <div className="mb-6 rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm print:hidden">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Receipt className="h-5 w-5 text-emerald-600" />
+                        <h2 className="text-lg font-bold text-neutral-900">Reporte de Ingresos y Facturación</h2>
+                      </div>
+                      <p className="text-xs text-neutral-400 mt-0.5">Filtra y ordena el historial de facturación por período y emite el reporte oficial en PDF o CSV</p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={handlePrintReport}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 transition-all shadow-sm"
+                      >
+                        <Printer className="h-4 w-4" /> Emitir Reporte PDF
+                      </button>
+                      <button
+                        onClick={exportCSV}
+                        className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-all"
+                      >
+                        <Download className="h-4 w-4 text-emerald-600" /> Exportar CSV
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-sm font-bold text-neutral-900">Total: ${monthRevenue.toLocaleString()} USD</span>
+
+                  <div className="mt-4 pt-4 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-4">
+                    {/* Period filters */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">Período:</span>
+                      {[
+                        { id: "ALL" as const, label: "Todos" },
+                        { id: "THIS_MONTH" as const, label: "Este Mes" },
+                        { id: "LAST_MONTH" as const, label: "Mes Anterior" },
+                        { id: "THIS_YEAR" as const, label: "Este Año" },
+                      ].map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setTimePeriod(p.id)}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                            timePeriod === p.id
+                              ? "bg-neutral-900 text-white shadow-sm"
+                              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Order selector */}
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-3.5 w-3.5 text-neutral-400" />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Ordenar por:</span>
+                      <select
+                        value={sortOrder}
+                        onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                        className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 focus:border-primary-400 focus:outline-none"
+                      >
+                        <option value="DATE_DESC">Fecha: Más reciente</option>
+                        <option value="DATE_ASC">Fecha: Más antigua</option>
+                        <option value="AMOUNT_DESC">Monto: Mayor a menor</option>
+                        <option value="AMOUNT_ASC">Monto: Menor a mayor</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
-                {completed.length === 0 ? (
+                {/* Summary KPI Cards for Report */}
+                <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                    <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Total Cobrado</p>
+                    <p className="text-2xl font-bold text-emerald-900 mt-1">${filteredTotal.toLocaleString()} USD</p>
+                  </div>
+                  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="text-xs font-semibold text-neutral-600 uppercase tracking-wider">Pacientes / Consultas</p>
+                    <p className="text-2xl font-bold text-neutral-900 mt-1">{filteredRevenue.length} atendidos</p>
+                  </div>
+                  <div className="rounded-2xl border border-primary-100 bg-primary-50/50 p-4">
+                    <p className="text-xs font-semibold text-primary-800 uppercase tracking-wider">Promedio por Cita</p>
+                    <p className="text-2xl font-bold text-primary-900 mt-1">${averageTicket.toFixed(2)} USD</p>
+                  </div>
+                </div>
+
+                {/* Transactions Table */}
+                {filteredRevenue.length === 0 ? (
                   <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-10 text-center">
                     <DollarSign className="h-8 w-8 text-neutral-300 mb-2" />
-                    <p className="text-sm font-medium text-neutral-600">No hay registros de ingresos para mostrar</p>
+                    <p className="text-sm font-medium text-neutral-600">No hay registros de facturación para el período seleccionado</p>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden">
                     <div className="divide-y divide-neutral-100">
-                      {completed.map((a) => {
+                      {filteredRevenue.map((a) => {
                         const pName = a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Paciente";
                         const pCode = getPatientCode(a.patient?.id ?? (a as any).patientId);
                         return (
                           <div key={a.id} className="flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 flex-shrink-0">
                                 <DollarSign className="h-4.5 w-4.5" />
                               </div>
                               <div>
@@ -309,7 +485,7 @@ export default function DoctorDashboardPage() {
 
             {/* Quick links */}
             {activeFilter === "ALL" && (
-              <section className="grid gap-4 sm:grid-cols-2">
+              <section className="grid gap-4 sm:grid-cols-2 print:hidden">
                 {[
                   { to: "/doctor/schedules", icon: Calendar, title: "Gestionar Horarios", desc: "Configura tu disponibilidad semanal", color: "bg-primary-50 text-primary-600" },
                   { to: "/doctor/services", icon: Settings, title: "Gestionar Servicios", desc: "Administra tus servicios y precios", color: "bg-neutral-100 text-neutral-600" },
