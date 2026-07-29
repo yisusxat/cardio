@@ -21,5 +21,9 @@
   "lint-staged": {
     "backend/**/*.{ts,tsx}": "npm run lint -w backend --",
     "frontend/**/*.{ts,tsx}": "npm run lint -w frontend --"
+  },
+  "dependencies": {
+    "@prisma/client": "5.22.0",
+    "prisma": "5.22.0"
   }
 }
