@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar, Clock, CheckCircle, Plus, ArrowRight,
-  Heart, Activity, User,
+  Heart, Activity, User, ShieldAlert,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
 import Spinner from '../../components/ui/Spinner';
+import RiskCalculatorModal from '../../components/ui/RiskCalculatorModal';
 import api from '../../lib/api';
 import { useAuth } from '../../hooks/use-auth';
 import { useUIStore } from '../../stores/ui.store';
@@ -45,6 +46,7 @@ export default function PatientDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [riskModalOpen, setRiskModalOpen] = useState(false);
 
   const fetchAppointments = async () => {
     try {
@@ -101,17 +103,25 @@ export default function PatientDashboardPage() {
             </div>
           </div>
 
-          <Link to="/doctors">
+          <div className="flex flex-wrap gap-3">
             <button
-              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5"
-              style={{
-                background: 'linear-gradient(135deg, #be123c, #e11d48)',
-                boxShadow: '0 8px 32px -4px rgba(225,29,72,0.4)',
-              }}
+              onClick={() => setRiskModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-4 py-2.5 text-xs font-semibold text-primary-700 hover:bg-primary-100 transition-colors"
             >
-              <Plus className="h-4 w-4" /> Agendar Nueva Cita
+              <Activity className="h-4 w-4" /> Evaluar Mi Riesgo
             </button>
-          </Link>
+            <Link to="/doctors">
+              <button
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5"
+                style={{
+                  background: 'linear-gradient(135deg, #be123c, #e11d48)',
+                  boxShadow: '0 8px 32px -4px rgba(225,29,72,0.4)',
+                }}
+              >
+                <Plus className="h-4 w-4" /> Agendar Cita
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* ── Stats ────────────────────────────────────────────────────────── */}
@@ -253,6 +263,9 @@ export default function PatientDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Risk Calculator Modal */}
+      <RiskCalculatorModal isOpen={riskModalOpen} onClose={() => setRiskModalOpen(false)} />
     </PageLayout>
   );
 }
