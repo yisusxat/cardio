@@ -1,4 +1,4 @@
-import { Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock, User, DollarSign } from 'lucide-react';
 import Badge, { appointmentStatusBadge } from '../ui/Badge';
 import Button from '../ui/Button';
 import { formatDate, formatPrice, formatTime } from '../../lib/utils';
@@ -38,70 +38,98 @@ export default function AppointmentCard({
   const { variant, label } = appointmentStatusBadge(a.status);
 
   return (
-    <div className="card p-5 transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-2">
-          {/* Date & time */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
-              <Calendar className="h-4 w-4 text-primary-500" />
+    <div
+      className="flex flex-col rounded-2xl border border-neutral-100 bg-white transition-all duration-200 hover:border-neutral-200 hover:-translate-y-0.5 overflow-hidden"
+      style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.07)' }}
+    >
+      {/* Top accent bar by status */}
+      <div
+        className="h-1 w-full"
+        style={{
+          background: a.status === 'PENDING' ? '#fbbf24'
+            : a.status === 'CONFIRMED' ? '#e11d48'
+            : a.status === 'COMPLETED' ? '#10b981'
+            : '#d1d5db',
+        }}
+      />
+
+      <div className="p-5">
+        {/* Header row: date + badge */}
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
+              <Calendar className="h-4 w-4 text-primary-500 flex-shrink-0" />
               {formatDate(a.date)}
             </div>
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
-              <Clock className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-xs text-neutral-400">
+              <Clock className="h-3.5 w-3.5 flex-shrink-0" />
               {formatTime(a.startTime)} – {formatTime(a.endTime)}
             </div>
           </div>
-
-          {/* Doctor or patient */}
-          {viewAs === 'patient' && a.doctor && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-              <User className="h-4 w-4 text-gray-400" />
-              Dr(a). {a.doctor.user.firstName} {a.doctor.user.lastName}
-              <span className="text-gray-400">·</span>
-              <span className="text-xs text-gray-500">{a.doctor.specialty}</span>
-            </div>
-          )}
-          {viewAs === 'doctor' && patientName && (
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-              <User className="h-4 w-4 text-gray-400" /> Paciente: {patientName}
-            </div>
-          )}
-
-          {/* Reason */}
-          {a.reason && (
-            <p className="text-sm text-gray-500">"{a.reason}"</p>
-          )}
-
-          {/* Services */}
-          {a.services.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {a.services.map((s) => (
-                <span key={s.id} className="rounded-lg bg-primary-50 px-2 py-0.5 text-xs text-primary-700">
-                  {s.service.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <Badge variant={variant}>{label}</Badge>
         </div>
 
-        <div className="flex flex-col items-end gap-3">
-          <Badge variant={variant}>{label}</Badge>
-          <span className="text-sm font-semibold text-gray-800">{formatPrice(Number(a.totalAmount))}</span>
+        {/* Doctor / Patient info */}
+        {viewAs === 'patient' && a.doctor && (
+          <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3 py-2.5">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary-100">
+              <User className="h-4 w-4 text-primary-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-neutral-800">
+                Dr(a). {a.doctor.user.firstName} {a.doctor.user.lastName}
+              </p>
+              <p className="text-xs text-neutral-400">{a.doctor.specialty}</p>
+            </div>
+          </div>
+        )}
+
+        {viewAs === 'doctor' && patientName && (
+          <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3 py-2.5">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-neutral-200">
+              <User className="h-4 w-4 text-neutral-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-neutral-400">Paciente</p>
+              <p className="truncate text-sm font-semibold text-neutral-800">{patientName}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Reason */}
+        {a.reason && (
+          <p className="mb-3 text-xs text-neutral-400 italic leading-relaxed line-clamp-2">
+            "{a.reason}"
+          </p>
+        )}
+
+        {/* Services */}
+        {a.services.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {a.services.map((s) => (
+              <span
+                key={s.id}
+                className="rounded-lg border border-primary-100 bg-primary-50 px-2 py-0.5 text-[11px] font-medium text-primary-700"
+              >
+                {s.service.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="flex items-center gap-1.5 text-sm font-bold text-neutral-800">
+          <DollarSign className="h-3.5 w-3.5 text-neutral-400" />
+          {formatPrice(Number(a.totalAmount))}
         </div>
       </div>
 
       {/* Actions */}
       {(onCancel || onStatusChange) && (
-        <div className="mt-4 flex gap-2 border-t border-gray-100 pt-4">
+        <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-3 flex flex-wrap gap-2">
           {viewAs === 'patient' && onCancel && a.status !== 'CANCELLED' && a.status !== 'COMPLETED' && (
-            <Button
-              variant="danger"
-              size="sm"
-              loading={loading}
-              onClick={() => onCancel(a.id)}
-            >
-              Cancelar
+            <Button variant="danger" size="sm" loading={loading} onClick={() => onCancel(a.id)}>
+              Cancelar cita
             </Button>
           )}
           {viewAs === 'doctor' && onStatusChange && (

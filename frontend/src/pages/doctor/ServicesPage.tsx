@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Trash2, Plus, Stethoscope } from 'lucide-react';
+import { Trash2, Plus, Stethoscope, ArrowLeft, DollarSign } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageLayout from '../../components/layout/PageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -28,6 +29,8 @@ export default function DoctorServicesPage() {
     isActive: boolean;
   }[]) ?? [];
 
+  const resetForm = () => { setName(''); setDescription(''); setPrice(''); };
+
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -40,9 +43,7 @@ export default function DoctorServicesPage() {
       toast.success('Servicio creado');
       await fetchMe();
       setModalOpen(false);
-      setName('');
-      setDescription('');
-      setPrice('');
+      resetForm();
     } catch {
       toast.error('Error al crear el servicio');
     } finally {
@@ -63,56 +64,107 @@ export default function DoctorServicesPage() {
     }
   };
 
+  const active = services.filter((s) => s.isActive);
+
   return (
     <PageLayout>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Servicios Médicos</h1>
-            <p className="mt-1 text-sm text-gray-500">Ofrece y administra los procedimientos o consultas especiales</p>
+
+        {/* Header */}
+        <div className="mb-7">
+          <Link
+            to="/doctor/dashboard"
+            className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-400 hover:text-neutral-600 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver al Panel
+          </Link>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-neutral-900">Servicios Médicos</h1>
+              <p className="mt-1 text-sm text-neutral-400">
+                {active.length} servicio{active.length !== 1 ? 's' : ''} activo{active.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: 'linear-gradient(135deg, #be123c, #e11d48)', boxShadow: '0 6px 20px -4px rgba(225,29,72,0.4)' }}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nuevo Servicio</span>
+              <span className="sm:hidden">Añadir</span>
+            </button>
           </div>
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4" /> Nuevo Servicio
-          </Button>
         </div>
 
+        {/* Services grid */}
         {services.length === 0 ? (
-          <div className="card p-12 text-center text-gray-500">
-            No has agregado servicios médicos adicionales.
+          <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-16 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50">
+              <Stethoscope className="h-7 w-7 text-primary-300" />
+            </div>
+            <p className="text-sm font-semibold text-neutral-700">Sin servicios registrados</p>
+            <p className="mt-1 text-xs text-neutral-400 max-w-xs">
+              Añade los procedimientos y consultas especiales que ofreces
+            </p>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="mt-5 rounded-xl bg-primary-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
+            >
+              Crear primer servicio
+            </button>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {services.map((s) => (
-              <div key={s.id} className="card flex flex-col justify-between p-5">
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Stethoscope className="h-5 w-5 text-primary-600" />
-                      <h3 className="font-semibold text-gray-900">{s.name}</h3>
+              <div
+                key={s.id}
+                className="group flex flex-col rounded-2xl border border-neutral-100 bg-white overflow-hidden transition-all duration-200 hover:border-neutral-200 hover:-translate-y-0.5"
+                style={{ boxShadow: '0 4px 24px -4px rgba(0,0,0,0.07)', opacity: s.isActive ? 1 : 0.55 }}
+              >
+                {/* Top accent */}
+                <div className="h-1 bg-gradient-to-r from-primary-500 to-primary-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-50">
+                        <Stethoscope className="h-5 w-5 text-primary-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-neutral-900">{s.name}</h3>
+                        {!s.isActive && (
+                          <span className="text-[10px] font-semibold uppercase text-neutral-400">Inactivo</span>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-bold text-primary-600">{formatPrice(Number(s.price))}</span>
+                    <div className="flex flex-shrink-0 items-center gap-1 rounded-xl bg-primary-50 px-3 py-1.5">
+                      <DollarSign className="h-3.5 w-3.5 text-primary-600" />
+                      <span className="text-sm font-bold text-primary-700">{formatPrice(Number(s.price))}</span>
+                    </div>
                   </div>
+
                   {s.description && (
-                    <p className="mt-2 text-sm text-gray-500">{s.description}</p>
+                    <p className="flex-1 text-xs text-neutral-400 leading-relaxed">{s.description}</p>
                   )}
                 </div>
-                <div className="mt-4 flex justify-end border-t border-gray-100 pt-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    loading={deletingId === s.id}
+
+                <div className="flex items-center justify-end border-t border-neutral-100 bg-neutral-50 px-5 py-3">
+                  <button
+                    disabled={deletingId === s.id}
                     onClick={() => handleDelete(s.id)}
-                    className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-neutral-400 hover:bg-primary-50 hover:text-primary-600 transition-colors disabled:opacity-40"
                   >
-                    <Trash2 className="h-4 w-4" /> Desactivar
-                  </Button>
+                    <Trash2 className="h-3.5 w-3.5" /> Desactivar
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo Servicio Médico">
+        {/* Modal */}
+        <Modal isOpen={modalOpen} onClose={() => { setModalOpen(false); resetForm(); }} title="Nuevo Servicio Médico">
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
             <Input
               label="Nombre del Servicio"
@@ -122,7 +174,7 @@ export default function DoctorServicesPage() {
               required
             />
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Descripción (Opcional)</label>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Descripción (Opcional)</label>
               <textarea
                 rows={3}
                 placeholder="Breve explicación del procedimiento..."
@@ -141,8 +193,8 @@ export default function DoctorServicesPage() {
               onChange={(e) => setPrice(e.target.value)}
               required
             />
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="secondary" type="button" onClick={() => setModalOpen(false)}>
+            <div className="mt-2 flex justify-end gap-3">
+              <Button variant="secondary" type="button" onClick={() => { setModalOpen(false); resetForm(); }}>
                 Cancelar
               </Button>
               <Button type="submit" loading={loading}>

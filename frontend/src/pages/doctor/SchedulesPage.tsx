@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Trash2, Plus, Clock } from 'lucide-react';
+import { Trash2, Plus, Clock, ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageLayout from '../../components/layout/PageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -19,6 +20,16 @@ const DAYS = [
   { id: 0, name: 'Domingo' },
 ];
 
+const DAY_COLORS: Record<number, string> = {
+  1: 'bg-primary-50 text-primary-700',
+  2: 'bg-amber-50 text-amber-700',
+  3: 'bg-emerald-50 text-emerald-700',
+  4: 'bg-sky-50 text-sky-700',
+  5: 'bg-violet-50 text-violet-700',
+  6: 'bg-orange-50 text-orange-700',
+  0: 'bg-neutral-100 text-neutral-600',
+};
+
 export default function DoctorSchedulesPage() {
   const { user, fetchMe } = useAuth();
   const toast = useUIStore();
@@ -36,6 +47,9 @@ export default function DoctorSchedulesPage() {
     startTime: string;
     endTime: string;
   }[]) ?? [];
+
+  // Sort by day
+  const sorted = [...schedules].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
@@ -68,51 +82,83 @@ export default function DoctorSchedulesPage() {
   return (
     <PageLayout>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestión de Horarios</h1>
-            <p className="mt-1 text-sm text-gray-500">Configura tus bloques de disponibilidad semanal</p>
+
+        {/* Header */}
+        <div className="mb-7">
+          <Link
+            to="/doctor/dashboard"
+            className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-neutral-400 hover:text-neutral-600 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver al Panel
+          </Link>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-neutral-900">Gestión de Horarios</h1>
+              <p className="mt-1 text-sm text-neutral-400">Configura tus bloques de disponibilidad semanal</p>
+            </div>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5"
+              style={{ background: 'linear-gradient(135deg, #be123c, #e11d48)', boxShadow: '0 6px 20px -4px rgba(225,29,72,0.4)' }}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nuevo Horario</span>
+              <span className="sm:hidden">Añadir</span>
+            </button>
           </div>
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4" /> Nuevo Horario
-          </Button>
         </div>
 
-        {schedules.length === 0 ? (
-          <div className="card p-12 text-center text-gray-500">
-            No has configurado ningún horario de atención todavía.
+        {/* Schedule grid */}
+        {sorted.length === 0 ? (
+          <div className="flex flex-col items-center rounded-3xl border border-dashed border-neutral-200 bg-white p-16 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-50">
+              <Clock className="h-7 w-7 text-primary-300" />
+            </div>
+            <p className="text-sm font-semibold text-neutral-700">Sin horarios configurados</p>
+            <p className="mt-1 text-xs text-neutral-400">Añade tu disponibilidad para que los pacientes puedan reservar</p>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="mt-5 rounded-xl bg-primary-600 px-5 py-2.5 text-xs font-semibold text-white hover:bg-primary-700 transition-colors"
+            >
+              Añadir primer horario
+            </button>
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {schedules.map((s) => (
-              <div key={s.id} className="card flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-                    <Clock className="h-5 w-5" />
-                  </div>
+            {sorted.map((s) => (
+              <div
+                key={s.id}
+                className="flex items-center justify-between rounded-2xl border border-neutral-100 bg-white px-5 py-4 transition-all duration-200 hover:border-neutral-200 hover:-translate-y-0.5"
+                style={{ boxShadow: '0 4px 20px -4px rgba(0,0,0,0.06)' }}
+              >
+                <div className="flex items-center gap-4">
+                  <span className={`rounded-xl px-3 py-1.5 text-xs font-bold ${DAY_COLORS[s.dayOfWeek] ?? 'bg-neutral-100 text-neutral-600'}`}>
+                    {getDayName(s.dayOfWeek)}
+                  </span>
                   <div>
-                    <p className="font-semibold text-gray-900">{getDayName(s.dayOfWeek)}</p>
-                    <p className="text-sm text-gray-500">{s.startTime} – {s.endTime}</p>
+                    <p className="text-sm font-semibold text-neutral-800">
+                      {s.startTime} – {s.endTime}
+                    </p>
+                    <p className="text-xs text-neutral-400">Bloque de atención</p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  loading={deletingId === s.id}
+                <button
+                  disabled={deletingId === s.id}
                   onClick={() => handleDelete(s.id)}
-                  className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-300 hover:bg-primary-50 hover:text-primary-600 transition-colors disabled:opacity-40"
                 >
                   <Trash2 className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
             ))}
           </div>
         )}
 
+        {/* Modal */}
         <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Añadir Horario de Atención">
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Día de la semana</label>
+              <label className="mb-1.5 block text-sm font-medium text-neutral-700">Día de la semana</label>
               <select
                 value={dayOfWeek}
                 onChange={(e) => setDayOfWeek(Number(e.target.value))}
@@ -124,28 +170,12 @@ export default function DoctorSchedulesPage() {
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Hora inicio"
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-              />
-              <Input
-                label="Hora fin"
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-              />
+              <Input label="Hora inicio" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
+              <Input label="Hora fin" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button variant="secondary" type="button" onClick={() => setModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" loading={loading}>
-                Guardar
-              </Button>
+            <div className="mt-2 flex justify-end gap-3">
+              <Button variant="secondary" type="button" onClick={() => setModalOpen(false)}>Cancelar</Button>
+              <Button type="submit" loading={loading}>Guardar Horario</Button>
             </div>
           </form>
         </Modal>
