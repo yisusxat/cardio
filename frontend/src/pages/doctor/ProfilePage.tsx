@@ -63,8 +63,6 @@ export default function DoctorProfilePage() {
     isActive: boolean;
   }[]) ?? [];
 
-  const activeServices = services.filter((s) => s.isActive);
-
   // ── Tag Handlers ─────────────────────────────────────────────────────────────
   const addTag = (value: string) => {
     const trimmed = value.trim().replace(/,/g, '');
@@ -282,14 +280,36 @@ export default function DoctorProfilePage() {
                 </button>
               </div>
 
-              {activeServices.length === 0 ? (
-                <p className="text-xs text-neutral-400 py-3">No tienes servicios adicionales activos.</p>
+              {services.length === 0 ? (
+                <p className="text-xs text-neutral-400 py-3">No has registrado servicios aún.</p>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {activeServices.map((serv) => (
-                    <div key={serv.id} className="flex items-center justify-between text-xs rounded-xl bg-neutral-50 px-3 py-2 border border-neutral-100">
-                      <span className="font-semibold text-neutral-700 truncate max-w-[200px]">{serv.name}</span>
-                      <span className="font-bold text-primary-600">{formatPrice(Number(serv.price))}</span>
+                  {services.map((serv) => (
+                    <div
+                      key={serv.id}
+                      className={`flex items-center justify-between text-xs rounded-xl px-3 py-2 border transition-all ${
+                        serv.isActive
+                          ? 'bg-neutral-50 border-neutral-100'
+                          : 'bg-neutral-100/50 border-neutral-200/60 opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold ${serv.isActive ? 'text-neutral-700' : 'text-neutral-400 line-through'}`}>
+                          {serv.name}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                            serv.isActive
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                              : 'bg-neutral-200 text-neutral-600'
+                          }`}
+                        >
+                          {serv.isActive ? 'Activo' : 'Desactivado'}
+                        </span>
+                      </div>
+                      <span className={`font-bold ${serv.isActive ? 'text-primary-600' : 'text-neutral-400'}`}>
+                        {formatPrice(Number(serv.price))}
+                      </span>
                     </div>
                   ))}
                 </div>
