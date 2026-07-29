@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import {
   ArrowLeft, User, Shield, Phone, Calendar,
   Droplets, Activity, AlertTriangle, Users, ChevronDown,
-  ChevronUp, Save, CheckCircle,
+  ChevronUp, Save, CheckCircle, FileText,
 } from "lucide-react";
 import PageLayout from "../../components/layout/PageLayout";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { useAuth } from "../../hooks/use-auth";
 import { useUIStore } from "../../stores/ui.store";
-import { getPatientCode } from "../../lib/utils";
+import { getPatientCode, formatDate } from "../../lib/utils";
 import api from "../../lib/api";
 import type { PatientProfile, Gender, BloodType, AlcoholConsumption } from "../../stores/auth.store";
 
@@ -190,10 +190,23 @@ function profileToForm(p: PatientProfile | null | undefined): FormData {
   };
 }
 
+interface ClinicalHistoryNote {
+  id: string;
+  diagnosis: string;
+  treatment: string;
+  bpRead?: string | null;
+  heartRate?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  doctor?: { user: { firstName: string; lastName: string } };
+  appointment?: { date: string };
+}
+
 export default function PatientProfilePage() {
   const { user, fetchMe } = useAuth();
   const toast = useUIStore();
   const [form, setForm] = useState<FormData>(profileToForm(user?.patientProfile));
+  const [historyNotes, setHistoryNotes] = useState<ClinicalHistoryNote[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [openSection, setOpenSection] = useState<string>("personal");
@@ -201,6 +214,14 @@ export default function PatientProfilePage() {
   useEffect(() => {
     setForm(profileToForm(user?.patientProfile));
   }, [user?.patientProfile]);
+
+  useEffect(() => {
+    if (user?.id) {
+      api.get(`/patients/history/${user.id}`)
+        .then((res) => setHistoryNotes(res.data?.data ?? []))
+        .catch(() => setHistoryNotes([]));
+    }
+  }, [user?.id]);
 
   const set = (field: keyof FormData) => (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -495,6 +516,59 @@ export default function PatientProfilePage() {
                 onChange={set("emergencyContactPhone")}
               />
             </div>
+          </Section>
+
+          {/* ── E. Historial de Fichas Clínicas & Recetas ── */}
+          <Section
+            title={`Historial de Consultas Médicas (${historyNotes.length})`}
+            icon={FileText}
+            open={openSection === "notes"}
+            onToggle={() => toggle("notes")}
+            accent="linear-gradient(135deg,#e11d48,#9f1239)"
+          >
+            {historyNotes.length === 0 ? (
+              <div className="py-6 text-center text-neutral-400 text-xs">
+                Aún no posees expedientes o fichas clínicas emitidas por tus médicos tratantes.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {historyNotes.map((note) => (
+                  <div key={note.id} className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4 text-xs">
+                    <div className="flex items-center justify-between border-b border-neutral-200/60 pb-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary-600" />
+                        <span className="font-semibold text-neutral-800">
+                          {formatDate(note.appointment?.date ?? note.createdAt)}
+                        </span>
+                        {note.doctor && (
+                          <span className="text-neutral-500 font-medium">
+                            · Dr(a). {note.doctor.user.firstName} {note.doctor.user.lastName}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2 font-mono text-[11px] text-neutral-600 bg-white px-2.5 py-1 rounded-lg border border-neutral-200">
+                        {note.bpRead && <span>PA: {note.bpRead}</span>}
+                        {note.heartRate && <span>FC: {note.heartRate} bpm</span>}
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 block mb-0.5">Diagnóstico</span>
+                      <p className="font-semibold text-neutral-900">{note.diagnosis}</p>
+                    </div>
+                    <div className="mb-2">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 block mb-0.5">Tratamiento & Prescripción</span>
+                      <p className="text-neutral-700 leading-relaxed bg-white p-3 rounded-xl border border-neutral-200/80">{note.treatment}</p>
+                    </div>
+                    {note.notes && (
+                      <div>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 block mb-0.5">Notas de Evolución</span>
+                        <p className="text-neutral-500 italic">{note.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </Section>
 
           {/* Save button */}

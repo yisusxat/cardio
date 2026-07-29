@@ -227,6 +227,7 @@ export default function DoctorDashboardPage() {
         <ClinicalNoteModal
           isOpen={noteModalOpen}
           onClose={() => { setNoteModalOpen(false); setSelectedAppointment(null); }}
+          appointmentId={selectedAppointment.id}
           patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : 'Paciente'}
           dateStr={selectedAppointment.date.split('T')[0]}
           onSaved={() => {

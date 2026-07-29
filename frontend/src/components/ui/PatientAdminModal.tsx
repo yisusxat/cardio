@@ -1,14 +1,14 @@
 ﻿import { useState, useEffect } from "react";
 import {
   User, Droplets, Activity,
-  AlertTriangle, Users, CheckCircle, Lock,
+  AlertTriangle, Users, CheckCircle, Lock, FileText, Calendar,
 } from "lucide-react";
 import Modal from "./Modal";
 import Button from "./Button";
 import Input from "./Input";
 import Spinner from "./Spinner";
 import { useUIStore } from "../../stores/ui.store";
-import { getPatientCode } from "../../lib/utils";
+import { getPatientCode, formatDate } from "../../lib/utils";
 import api from "../../lib/api";
 
 type Gender = "MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY";
@@ -33,6 +33,18 @@ const ALCOHOL_OPTIONS: { value: AlcoholConsumption; label: string }[] = [
   { value: "MODERATE", label: "Moderado" },
   { value: "HEAVY", label: "Frecuente" },
 ];
+
+interface ClinicalHistoryNote {
+  id: string;
+  diagnosis: string;
+  treatment: string;
+  bpRead?: string | null;
+  heartRate?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  doctor?: { user: { firstName: string; lastName: string } };
+  appointment?: { date: string };
+}
 
 interface PatientAdminModalProps {
   isOpen: boolean;
@@ -101,20 +113,24 @@ export default function PatientAdminModal({
 }: PatientAdminModalProps) {
   const toast = useUIStore();
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [historyNotes, setHistoryNotes] = useState<ClinicalHistoryNote[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const patientCode = getPatientCode(patientId);
 
-  // Fetch existing patient profile data on open
+  // Fetch existing patient profile data and clinical history on open
   useEffect(() => {
     if (isOpen && patientId) {
       setLoading(true);
       setAuthError(null);
-      api.get(`/patients/summary/${patientId}`)
-        .then((res) => {
-          const p = res.data.data?.profile;
+      Promise.all([
+        api.get(`/patients/summary/${patientId}`),
+        api.get(`/patients/history/${patientId}`).catch(() => ({ data: { data: [] } })),
+      ])
+        .then(([resSummary, resHistory]) => {
+          const p = resSummary.data.data?.profile;
           if (p) {
             setForm({
               phone: p.phone ?? "",
@@ -134,6 +150,7 @@ export default function PatientAdminModal({
           } else {
             setForm(EMPTY);
           }
+          setHistoryNotes(resHistory.data?.data ?? []);
         })
         .catch((err) => {
           if (err.response?.status === 403) {
@@ -292,6 +309,39 @@ export default function PatientAdminModal({
               <Input label="Teléfono del contacto" id="adm-ec-phone" type="tel" placeholder="+58 412 000 0000" value={form.emergencyContactPhone} onChange={set("emergencyContactPhone")} />
             </div>
           </div>
+
+          {/* E. Historial Clínico de Consultas */}
+          {historyNotes.length > 0 && (
+            <div className="rounded-2xl border border-primary-100 bg-primary-50/50 p-4">
+              <SectionHeader icon={FileText} title={`Historial Clínico (${historyNotes.length} consulta${historyNotes.length > 1 ? 's' : ''})`} accent="linear-gradient(135deg,#e11d48,#9f1239)" />
+              <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-1">
+                {historyNotes.map((note) => (
+                  <div key={note.id} className="rounded-xl border border-neutral-200 bg-white p-3.5 shadow-sm text-xs">
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5 text-primary-600" />
+                        <span className="font-semibold text-neutral-800">
+                          {formatDate(note.appointment?.date ?? note.createdAt)}
+                        </span>
+                        {note.doctor && (
+                          <span className="text-neutral-400">
+                            · Dr(a). {note.doctor.user.firstName} {note.doctor.user.lastName}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2 font-mono text-[10px] text-neutral-500">
+                        {note.bpRead && <span>PA: {note.bpRead}</span>}
+                        {note.heartRate && <span>FC: {note.heartRate}</span>}
+                      </div>
+                    </div>
+                    <p className="font-semibold text-neutral-800 mb-1">Diagnóstico: {note.diagnosis}</p>
+                    <p className="text-neutral-600 leading-relaxed">Tratamiento: {note.treatment}</p>
+                    {note.notes && <p className="mt-1 text-neutral-400 italic">Notas: {note.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-3">

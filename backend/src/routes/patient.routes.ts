@@ -2,6 +2,7 @@
 import { authenticate } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { patientController, patientProfileSchema } from "../controllers/patient.controller";
+import { clinicalNoteController } from "../controllers/clinical-note.controller";
 
 const router = Router();
 
@@ -14,5 +15,8 @@ router.put("/admin/:patientId", authenticate, validate(patientProfileSchema), pa
 
 // Doctor accessing patient summary (for appointment view)
 router.get("/summary/:patientId", authenticate, patientController.getPatientSummary);
+
+// Clinical history for patient profile & doctor view
+router.get("/history/:patientId", authenticate, clinicalNoteController.getPatientHistory);
 
 export default router;
