@@ -669,6 +669,22 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* ── Floating Mobile CTA ── */}
+      <div className="fixed bottom-6 right-5 z-40 md:hidden">
+        <Link to="/doctors">
+          <button
+            className="flex items-center gap-2.5 rounded-full px-5 py-3.5 text-xs font-bold text-white shadow-luxury-lg transition-transform active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, #be123c 0%, #e11d48 100%)',
+              boxShadow: '0 10px 30px -4px rgba(225,29,72,0.6)',
+            }}
+          >
+            <Calendar className="h-4 w-4" />
+            <span>Agendar Cita</span>
+          </button>
+        </Link>
+      </div>
+
     </PageLayout>
   );
 }

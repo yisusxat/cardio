@@ -13,7 +13,7 @@ const variantClasses = {
   secondary: 'btn-secondary',
   ghost: 'btn-ghost',
   danger:
-    'inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-red-glow transition-all duration-300 hover:bg-primary-700 hover:shadow-red-glow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none',
+    'inline-flex items-center justify-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-5 py-3 text-sm font-semibold text-primary-700 transition-all duration-200 hover:border-primary-300 hover:bg-primary-100 hover:text-primary-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50 disabled:cursor-not-allowed',
 };
 
 const sizeClasses = {
