@@ -32,6 +32,23 @@ const APPOINTMENT_INCLUDE = {
   payments: true,
 } as const;
 
+// Doctor view — always includes patient name + profile (for age)
+const DOCTOR_APPOINTMENT_INCLUDE = {
+  patient: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+      patientProfile: {
+        select: { dateOfBirth: true },
+      },
+    },
+  },
+  services: { include: { service: true } },
+  payments: true,
+} as const;
+
 export const appointmentService = {
   async getForUser(userId: string, role: UserRole) {
     if (role === UserRole.PATIENT) {
@@ -48,11 +65,7 @@ export const appointmentService = {
 
       return prisma.appointment.findMany({
         where: { doctorId: doctor.id },
-        include: {
-          ...APPOINTMENT_INCLUDE,
-          doctor: undefined,
-          // For doctor view, include patient info instead
-        },
+        include: DOCTOR_APPOINTMENT_INCLUDE,
         orderBy: [{ date: 'desc' }, { startTime: 'asc' }],
       });
     }
@@ -78,11 +91,7 @@ export const appointmentService = {
 
     return prisma.appointment.findMany({
       where: { doctorId: doctor.id },
-      include: {
-        doctor: { include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } } },
-        services: { include: { service: true } },
-        payments: true,
-      },
+      include: DOCTOR_APPOINTMENT_INCLUDE,
       orderBy: [{ date: 'desc' }, { startTime: 'asc' }],
     });
   },

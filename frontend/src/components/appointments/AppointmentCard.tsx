@@ -19,6 +19,7 @@ export interface Appointment {
   patient?: {
     firstName: string;
     lastName: string;
+    patientProfile?: { dateOfBirth?: string | null } | null;
   };
   services: { id: string; service: { name: string }; priceAtTime: number | string }[];
 }
@@ -45,6 +46,23 @@ export default function AppointmentCard({
   loading,
 }: AppointmentCardProps) {
   const { variant, label } = appointmentStatusBadge(a.status);
+
+  // Calculate patient age from patientProfile.dateOfBirth
+  const patientAge = (() => {
+    const dob = a.patient?.patientProfile?.dateOfBirth;
+    if (!dob) return null;
+    const d = new Date(dob);
+    if (isNaN(d.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - d.getFullYear();
+    const m = today.getMonth() - d.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+    return age;
+  })();
+
+  // Resolved patient display name (prop takes priority, else from appointment.patient)
+  const resolvedPatientName = patientName
+    ?? (a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : null);
 
   return (
     <div
@@ -93,14 +111,19 @@ export default function AppointmentCard({
           </div>
         )}
 
-        {viewAs === 'doctor' && patientName && (
+        {viewAs === 'doctor' && (
           <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3 py-2.5">
             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-neutral-200">
               <User className="h-4 w-4 text-neutral-500" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-neutral-400">Paciente</p>
-              <p className="truncate text-sm font-semibold text-neutral-800">{patientName}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Paciente</p>
+              <p className="truncate text-sm font-semibold text-neutral-800">
+                {resolvedPatientName ?? 'Sin nombre registrado'}
+              </p>
+              {patientAge != null && (
+                <p className="text-[11px] text-neutral-400">{patientAge} años</p>
+              )}
             </div>
           </div>
         )}
