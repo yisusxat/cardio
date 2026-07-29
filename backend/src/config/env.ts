@@ -22,7 +22,7 @@ const envSchema = z.object({
     .transform((v) => Number(v)),
   RATE_LIMIT_MAX_REQUESTS: z
     .string()
-    .default('100')
+    .default('500')
     .transform((v) => Number(v)),
 });
 
