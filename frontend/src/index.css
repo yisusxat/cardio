@@ -41,21 +41,32 @@
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl
            bg-primary-600 px-5 py-3 text-sm font-semibold text-white
-           shadow-red-glow transition-all duration-300
-           hover:bg-primary-700 hover:shadow-red-glow-lg hover:-translate-y-0.5
+           transition-all duration-300
+           hover:bg-primary-700 hover:-translate-y-0.5
            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600
-           active:translate-y-0 active:shadow-red-glow
-           disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none disabled:shadow-none;
+           active:translate-y-0
+           disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none;
+    box-shadow: 0 8px 32px -4px rgba(225, 29, 72, 0.25);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 16px 48px -8px rgba(225, 29, 72, 0.35);
+  }
+  .btn-primary:active, .btn-primary:disabled {
+    box-shadow: none;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl
            border border-neutral-200 bg-white px-5 py-3 text-sm font-semibold text-neutral-700
-           shadow-luxury transition-all duration-300
-           hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 hover:-translate-y-0.5 hover:shadow-luxury-md
+           transition-all duration-300
+           hover:border-primary-200 hover:text-primary-700 hover:bg-primary-50 hover:-translate-y-0.5
            focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600
            active:translate-y-0
            disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none;
+    box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 1px 4px -1px rgba(0,0,0,0.04);
+  }
+  .btn-secondary:hover {
+    box-shadow: 0 8px 40px -8px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
   }
 
   .btn-ghost {
@@ -76,11 +87,15 @@
 
   /* ── Cards ───────────────────────────────────────────────────────────────── */
   .card {
-    @apply rounded-2xl border border-neutral-200/70 bg-white shadow-luxury;
+    @apply rounded-2xl border border-neutral-200/70 bg-white;
+    box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 1px 4px -1px rgba(0,0,0,0.04);
   }
 
   .card-hover {
-    @apply card transition-all duration-300 hover:shadow-luxury-md hover:-translate-y-1 hover:border-neutral-300/60;
+    @apply card transition-all duration-300 hover:-translate-y-1 hover:border-neutral-300/60;
+  }
+  .card-hover:hover {
+    box-shadow: 0 8px 40px -8px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.06);
   }
 
   .card-glass {
@@ -123,12 +138,21 @@
 
   /* ── Stats pill ──────────────────────────────────────────────────────────── */
   .stat-card {
-    @apply flex flex-col items-center justify-center rounded-2xl bg-white p-6 shadow-luxury
+    @apply flex flex-col items-center justify-center rounded-2xl bg-white p-6
            border border-neutral-100/80 text-center;
+    box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 1px 4px -1px rgba(0,0,0,0.04);
   }
 }
 
 @layer utilities {
+  /* ── Custom shadows (defined here so @apply works) ─────────────────────── */
+  .shadow-luxury     { box-shadow: 0 4px 24px -4px rgba(0,0,0,0.08), 0 1px 4px -1px rgba(0,0,0,0.04); }
+  .shadow-luxury-md  { box-shadow: 0 8px 40px -8px rgba(0,0,0,0.12), 0 2px 8px -2px rgba(0,0,0,0.06); }
+  .shadow-luxury-lg  { box-shadow: 0 20px 60px -12px rgba(0,0,0,0.18), 0 4px 16px -4px rgba(0,0,0,0.08); }
+  .shadow-red-glow   { box-shadow: 0 8px 32px -4px rgba(225, 29, 72, 0.25); }
+  .shadow-red-glow-lg { box-shadow: 0 16px 48px -8px rgba(225, 29, 72, 0.35); }
+
+  /* ── Animation delays ───────────────────────────────────────────────────── */
   .animate-delay-100 { animation-delay: 100ms; }
   .animate-delay-200 { animation-delay: 200ms; }
   .animate-delay-300 { animation-delay: 300ms; }
