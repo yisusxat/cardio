@@ -1,5 +1,6 @@
 ﻿import { Response, NextFunction } from "express";
 import { z } from "zod";
+import { AppointmentStatus } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { sendSuccess } from "../utils/api-response";
 import { AuthRequest } from "../middlewares/auth.middleware";
@@ -25,6 +26,13 @@ export const patientProfileSchema = z.object({
   emergencyContactPhone: z.string().max(20).optional().nullable(),
 });
 
+/** Returns formatted unique irreplaceable patient ID */
+export function getPatientCode(userId: string): string {
+  if (!userId) return "PAT-00000000";
+  const clean = userId.replace(/-/g, "").toUpperCase();
+  return `PAT-${clean.substring(0, 8)}`;
+}
+
 /** Returns true when a patient has the minimum administrative record filled */
 export async function hasAdminProfile(patientUserId: string): Promise<boolean> {
   const profile = await prisma.patientProfile.findUnique({
@@ -35,13 +43,34 @@ export async function hasAdminProfile(patientUserId: string): Promise<boolean> {
   return !!(profile.phone || profile.dateOfBirth || profile.gender);
 }
 
+/** Helper to check if a doctor has an active confirmed/completed appointment with a patient */
+async function verifyDoctorAccessToPatient(doctorId: string, patientUserId: string) {
+  const doctor = await prisma.doctor.findUnique({ where: { userId: doctorId } });
+  if (!doctor) throw new ForbiddenError("No posee un perfil médico activo.");
+
+  const hasAppointment = await prisma.appointment.findFirst({
+    where: {
+      doctorId: doctor.id,
+      patientId: patientUserId,
+      status: { in: [AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED] },
+    },
+  });
+
+  if (!hasAppointment) {
+    throw new ForbiddenError(
+      "Solo el médico que posea una cita confirmada con este paciente puede consultar o modificar su ficha."
+    );
+  }
+}
+
 export const patientController = {
   async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const profile = await prisma.patientProfile.findUnique({
         where: { userId: req.user!.id },
       });
-      sendSuccess(res, profile ?? null);
+      const patientCode = getPatientCode(req.user!.id);
+      sendSuccess(res, profile ? { ...profile, patientCode } : { patientCode });
     } catch (err) {
       next(err);
     }
@@ -66,7 +95,8 @@ export const patientController = {
         },
       });
 
-      sendSuccess(res, profile, 200, "Profile updated successfully");
+      const patientCode = getPatientCode(req.user!.id);
+      sendSuccess(res, { ...profile, patientCode }, 200, "Profile updated successfully");
     } catch (err) {
       next(err);
     }
@@ -77,9 +107,15 @@ export const patientController = {
       if (req.user!.role !== "DOCTOR" && req.user!.role !== "ADMIN") {
         throw new ForbiddenError();
       }
+
       const { patientId } = req.params;
       const patient = await prisma.user.findUnique({ where: { id: patientId } });
       if (!patient) throw new NotFoundError("Patient");
+
+      // Verify doctor has confirmed appointment with this patient (unless admin)
+      if (req.user!.role === "DOCTOR") {
+        await verifyDoctorAccessToPatient(req.user!.id, patientId);
+      }
 
       const data = patientProfileSchema.parse(req.body);
 
@@ -96,7 +132,8 @@ export const patientController = {
         },
       });
 
-      sendSuccess(res, profile, 200, "Patient administrative profile updated");
+      const patientCode = getPatientCode(patientId);
+      sendSuccess(res, { ...profile, patientCode }, 200, "Patient administrative profile updated");
     } catch (err) {
       next(err);
     }
@@ -105,15 +142,27 @@ export const patientController = {
   async getPatientSummary(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { patientId } = req.params;
+
+      // Verify doctor access
+      if (req.user!.role === "DOCTOR") {
+        await verifyDoctorAccessToPatient(req.user!.id, patientId);
+      }
+
       const profile = await prisma.patientProfile.findUnique({
         where: { userId: patientId },
       });
       const user = await prisma.user.findUnique({
         where: { id: patientId },
-        select: { firstName: true, lastName: true, email: true },
+        select: { id: true, firstName: true, lastName: true, email: true },
       });
       if (!user) throw new NotFoundError("Patient");
-      sendSuccess(res, { user, profile: profile ?? null });
+
+      const patientCode = getPatientCode(patientId);
+
+      sendSuccess(res, {
+        user: { ...user, patientCode },
+        profile: profile ? { ...profile, patientCode } : null,
+      });
     } catch (err) {
       next(err);
     }

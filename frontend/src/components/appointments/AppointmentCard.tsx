@@ -1,7 +1,7 @@
 import { Calendar as CalendarIcon, Clock, User, DollarSign, Star, FileText, Share2 } from 'lucide-react';
 import Badge, { appointmentStatusBadge } from '../ui/Badge';
 import Button from '../ui/Button';
-import { formatDate, formatPrice, formatTime } from '../../lib/utils';
+import { formatDate, formatPrice, formatTime, getPatientCode } from '../../lib/utils';
 import { generateGoogleCalendarUrl, downloadICSFile } from '../../lib/calendar.utils';
 
 export interface Appointment {
@@ -17,6 +17,7 @@ export interface Appointment {
     specialty: string;
   };
   patient?: {
+    id?: string;
     firstName: string;
     lastName: string;
     patientProfile?: { dateOfBirth?: string | null } | null;
@@ -117,22 +118,40 @@ export default function AppointmentCard({
           </div>
         )}
 
-        {viewAs === 'doctor' && (
-          <div className="mb-3 flex items-center gap-2.5 rounded-xl bg-neutral-50 px-3 py-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-neutral-200">
-              <User className="h-4 w-4 text-neutral-500" />
+        {viewAs === 'doctor' && (() => {
+          const pId = a.patient?.id ?? (a as any).patientId;
+          const pCode = getPatientCode(pId);
+          return (
+            <div
+              onClick={() => onOpenPatientAdmin?.(a)}
+              className="mb-3 flex items-center justify-between gap-2.5 rounded-xl bg-neutral-50 hover:bg-neutral-100/80 px-3.5 py-2.5 transition-all cursor-pointer group border border-neutral-100 hover:border-primary-200"
+              title="Clic para ver o editar Ficha de Paciente"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-neutral-200 group-hover:bg-primary-100 transition-colors">
+                  <User className="h-4 w-4 text-neutral-600 group-hover:text-primary-600 transition-colors" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Paciente</p>
+                    <span className="rounded bg-neutral-200/70 px-1.5 py-0.2 text-[10px] font-mono font-bold text-neutral-600">
+                      {pCode}
+                    </span>
+                  </div>
+                  <p className="truncate text-sm font-semibold text-neutral-900 group-hover:text-primary-600 transition-colors">
+                    {resolvedPatientName ?? 'Sin nombre registrado'}
+                  </p>
+                  {patientAge != null && (
+                    <p className="text-[11px] text-neutral-500">{patientAge} años</p>
+                  )}
+                </div>
+              </div>
+              <span className="text-[10px] font-semibold text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                Ver ficha →
+              </span>
             </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Paciente</p>
-              <p className="truncate text-sm font-semibold text-neutral-800">
-                {resolvedPatientName ?? 'Sin nombre registrado'}
-              </p>
-              {patientAge != null && (
-                <p className="text-[11px] text-neutral-400">{patientAge} años</p>
-              )}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Reason */}
         {a.reason && (

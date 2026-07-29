@@ -10,6 +10,7 @@ import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { useAuth } from "../../hooks/use-auth";
 import { useUIStore } from "../../stores/ui.store";
+import { getPatientCode } from "../../lib/utils";
 import api from "../../lib/api";
 import type { PatientProfile, Gender, BloodType, AlcoholConsumption } from "../../stores/auth.store";
 
@@ -298,9 +299,14 @@ export default function PatientProfilePage() {
                 {initials}
               </div>
               <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white/80 mb-2">
-                  <Shield className="h-3.5 w-3.5" /> Paciente Verificado
-                </span>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
+                    <Shield className="h-3.5 w-3.5" /> Paciente Verificado
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-primary-400/40 bg-primary-500/20 px-3 py-1 text-xs font-mono font-bold text-primary-200">
+                    ID: {getPatientCode(user?.id)}
+                  </span>
+                </div>
                 <h1 className="font-display text-2xl font-semibold text-white">
                   {user?.firstName} {user?.lastName}
                 </h1>

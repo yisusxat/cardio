@@ -48,3 +48,8 @@ export function getApiErrorMessage(error: unknown): string {
   }
   return 'Ocurrió un error inesperado';
 }
+export function getPatientCode(userId?: string | null): string {
+  if (!userId) return 'PAT-00000000';
+  const clean = userId.replace(/-/g, '').toUpperCase();
+  return `PAT-${clean.substring(0, 8)}`;
+}
