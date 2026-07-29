@@ -48,6 +48,10 @@ export default function DoctorDashboardPage() {
   // Revenue Controls
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('ALL');
   const [sortOrder, setSortOrder] = useState<SortOrder>('DATE_DESC');
+  const [revenueStartYear, setRevenueStartYear] = useState<string>('ALL');
+  const [revenueStartMonth, setRevenueStartMonth] = useState<string>('ALL');
+  const [revenueStartDate, setRevenueStartDate] = useState<string>('');
+  const [revenueEndDate, setRevenueEndDate] = useState<string>('');
 
   // Patients History Controls
   const [patientSearch, setPatientSearch] = useState('');
@@ -105,7 +109,7 @@ export default function DoctorDashboardPage() {
     return Array.from(yearsSet).sort((a, b) => b - a);
   }, [completed]);
 
-  // Filtered Revenue List
+  // Filtered Revenue List with Custom Month / Year / Date Range
   const filteredRevenue = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -124,6 +128,27 @@ export default function DoctorDashboardPage() {
       if (timePeriod === 'THIS_YEAR') {
         return d.getFullYear() === currentYear;
       }
+
+      // Custom Month & Year Dropdown Filters
+      if (revenueStartYear !== 'ALL' && d.getFullYear() !== Number(revenueStartYear)) {
+        return false;
+      }
+      if (revenueStartMonth !== 'ALL' && d.getMonth() !== Number(revenueStartMonth)) {
+        return false;
+      }
+
+      // Custom Date Range Filters (From / To)
+      if (revenueStartDate) {
+        const start = new Date(revenueStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (d.getTime() < start.getTime()) return false;
+      }
+      if (revenueEndDate) {
+        const end = new Date(revenueEndDate);
+        end.setHours(23, 59, 59, 999);
+        if (d.getTime() > end.getTime()) return false;
+      }
+
       return true;
     });
 
@@ -134,7 +159,7 @@ export default function DoctorDashboardPage() {
       if (sortOrder === 'AMOUNT_ASC') return Number(a.totalAmount) - Number(b.totalAmount);
       return 0;
     });
-  }, [completed, timePeriod, sortOrder]);
+  }, [completed, timePeriod, revenueStartYear, revenueStartMonth, revenueStartDate, revenueEndDate, sortOrder]);
 
   const filteredTotal = useMemo(() => {
     return filteredRevenue.reduce((s, a) => s + Number(a.totalAmount ?? 0), 0);
@@ -206,7 +231,7 @@ export default function DoctorDashboardPage() {
     return ids.size;
   }, [filteredCompletedPatients]);
 
-  // Dynamic Period Description Label
+  // Dynamic Period Description Label for Patients History
   const getPeriodDescription = () => {
     if (patientPeriod === 'CUSTOM') {
       const parts = [];
@@ -221,6 +246,21 @@ export default function DoctorDashboardPage() {
     return PERIOD_LABELS[patientPeriod];
   };
 
+  // Dynamic Period Description Label for Revenue Report
+  const getRevenuePeriodDescription = () => {
+    if (timePeriod === 'CUSTOM') {
+      const parts = [];
+      if (revenueStartMonth !== 'ALL') parts.push(MONTH_NAMES[Number(revenueStartMonth)]);
+      if (revenueStartYear !== 'ALL') parts.push(revenueStartYear);
+      if (revenueStartDate && revenueEndDate) {
+        return `Del ${revenueStartDate} al ${revenueEndDate}`;
+      }
+      if (parts.length > 0) return `Rango: ${parts.join(' ')}`;
+      return 'Rango Personalizado';
+    }
+    return PERIOD_LABELS[timePeriod];
+  };
+
   // Reset Patients Filters
   const resetPatientFilters = () => {
     setPatientPeriod('ALL');
@@ -229,6 +269,15 @@ export default function DoctorDashboardPage() {
     setPatientStartDate('');
     setPatientEndDate('');
     setPatientSearch('');
+  };
+
+  // Reset Revenue Filters
+  const resetRevenueFilters = () => {
+    setTimePeriod('ALL');
+    setRevenueStartYear('ALL');
+    setRevenueStartMonth('ALL');
+    setRevenueStartDate('');
+    setRevenueEndDate('');
   };
 
   // Export Patients History CSV
@@ -345,7 +394,7 @@ export default function DoctorDashboardPage() {
             <div className="text-right">
               <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Período Auditado</p>
               <p className="text-sm font-bold text-neutral-900">
-                {activeFilter === 'COMPLETED' ? getPeriodDescription() : PERIOD_LABELS[timePeriod]}
+                {activeFilter === 'COMPLETED' ? getPeriodDescription() : getRevenuePeriodDescription()}
               </p>
               <p className="text-neutral-500">
                 {activeFilter === 'COMPLETED' ? `${filteredCompletedPatients.length} consultas registradas` : `${filteredRevenue.length} transacciones registradas`}
@@ -829,45 +878,134 @@ export default function DoctorDashboardPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-4">
-                    {/* Period filters */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">Período:</span>
-                      {[
-                        { id: 'ALL' as const, label: 'Todos' },
-                        { id: 'THIS_MONTH' as const, label: 'Este Mes' },
-                        { id: 'LAST_MONTH' as const, label: 'Mes Anterior' },
-                        { id: 'THIS_YEAR' as const, label: 'Este Año' },
-                      ].map((p) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setTimePeriod(p.id)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                            timePeriod === p.id
-                              ? 'bg-neutral-900 text-white shadow-sm'
-                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                          }`}
+                  <div className="mt-4 pt-4 border-t border-neutral-100 flex flex-col gap-4">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      {/* Period filters */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1">Período:</span>
+                        {[
+                          { id: 'ALL' as const, label: 'Todos' },
+                          { id: 'THIS_MONTH' as const, label: 'Este Mes' },
+                          { id: 'LAST_MONTH' as const, label: 'Mes Anterior' },
+                          { id: 'THIS_YEAR' as const, label: 'Este Año' },
+                          { id: 'CUSTOM' as const, label: '🗓️ Rango Personalizado' },
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              setTimePeriod(p.id);
+                              if (p.id !== 'CUSTOM') {
+                                setRevenueStartYear('ALL');
+                                setRevenueStartMonth('ALL');
+                                setRevenueStartDate('');
+                                setRevenueEndDate('');
+                              }
+                            }}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+                              timePeriod === p.id
+                                ? 'bg-neutral-900 text-white shadow-sm'
+                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Order selector */}
+                      <div className="flex items-center gap-2">
+                        <ArrowUpDown className="h-3.5 w-3.5 text-neutral-400" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Ordenar por:</span>
+                        <select
+                          value={sortOrder}
+                          onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 focus:border-primary-400 focus:outline-none"
                         >
-                          {p.label}
-                        </button>
-                      ))}
+                          <option value="DATE_DESC">Fecha: Más reciente</option>
+                          <option value="DATE_ASC">Fecha: Más antigua</option>
+                          <option value="AMOUNT_DESC">Monto: Mayor a menor</option>
+                          <option value="AMOUNT_ASC">Monto: Menor a mayor</option>
+                        </select>
+                      </div>
                     </div>
 
-                    {/* Order selector */}
-                    <div className="flex items-center gap-2">
-                      <ArrowUpDown className="h-3.5 w-3.5 text-neutral-400" />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Ordenar por:</span>
-                      <select
-                        value={sortOrder}
-                        onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-                        className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 focus:border-primary-400 focus:outline-none"
-                      >
-                        <option value="DATE_DESC">Fecha: Más reciente</option>
-                        <option value="DATE_ASC">Fecha: Más antigua</option>
-                        <option value="AMOUNT_DESC">Monto: Mayor a menor</option>
-                        <option value="AMOUNT_ASC">Monto: Menor a mayor</option>
-                      </select>
-                    </div>
+                    {/* Advanced Custom Range Selector for Revenue (Visible when CUSTOM or interacting) */}
+                    {(timePeriod === 'CUSTOM' || revenueStartYear !== 'ALL' || revenueStartMonth !== 'ALL' || revenueStartDate || revenueEndDate) && (
+                      <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-xl border border-primary-100 bg-primary-50/30 animate-fade-in">
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-3.5 w-3.5 text-primary-600" />
+                          <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider">Filtrar Facturación por Mes / Año / Rango:</span>
+                        </div>
+
+                        {/* Month Selector */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500 font-medium">Mes:</span>
+                          <select
+                            value={revenueStartMonth}
+                            onChange={(e) => {
+                              setRevenueStartMonth(e.target.value);
+                              setTimePeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          >
+                            <option value="ALL">Todos los meses</option>
+                            {MONTH_NAMES.map((m, idx) => (
+                              <option key={m} value={idx}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Year Selector */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500 font-medium">Año:</span>
+                          <select
+                            value={revenueStartYear}
+                            onChange={(e) => {
+                              setRevenueStartYear(e.target.value);
+                              setTimePeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          >
+                            <option value="ALL">Todos los años</option>
+                            {availableYears.map((y) => (
+                              <option key={y} value={y}>{y}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Date Range Inputs */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-neutral-500 font-medium">Desde:</span>
+                          <input
+                            type="date"
+                            value={revenueStartDate}
+                            onChange={(e) => {
+                              setRevenueStartDate(e.target.value);
+                              setTimePeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          />
+                          <span className="text-xs text-neutral-500 font-medium">Hasta:</span>
+                          <input
+                            type="date"
+                            value={revenueEndDate}
+                            onChange={(e) => {
+                              setRevenueEndDate(e.target.value);
+                              setTimePeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Reset Filter Button */}
+                        <button
+                          onClick={resetRevenueFilters}
+                          className="ml-auto text-xs font-semibold text-primary-600 hover:text-primary-800 underline"
+                        >
+                          Limpiar Filtros
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
