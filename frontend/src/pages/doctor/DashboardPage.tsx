@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Calendar, Clock, CheckCircle, Users, ArrowRight,
   Heart, Settings, TrendingUp, DollarSign, RotateCcw,
-  Printer, Download, ArrowUpDown, Receipt, Search, UserCheck,
+  Printer, Download, ArrowUpDown, Receipt, Search, UserCheck, Filter,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
@@ -16,14 +16,20 @@ import { useUIStore } from '../../stores/ui.store';
 import { formatDate, formatPrice, getPatientCode } from '../../lib/utils';
 
 type FilterType = 'ALL' | 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'REVENUE';
-type TimePeriod = 'ALL' | 'THIS_MONTH' | 'LAST_MONTH' | 'THIS_YEAR';
+type TimePeriod = 'ALL' | 'THIS_MONTH' | 'LAST_MONTH' | 'THIS_YEAR' | 'CUSTOM';
 type SortOrder = 'DATE_DESC' | 'DATE_ASC' | 'AMOUNT_DESC' | 'AMOUNT_ASC';
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
 
 const PERIOD_LABELS: Record<TimePeriod, string> = {
   ALL: 'Histórico Completo',
   THIS_MONTH: 'Este Mes',
   LAST_MONTH: 'Mes Anterior',
   THIS_YEAR: 'Este Año',
+  CUSTOM: 'Rango Personalizado',
 };
 
 export default function DoctorDashboardPage() {
@@ -46,6 +52,10 @@ export default function DoctorDashboardPage() {
   // Patients History Controls
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPeriod, setPatientPeriod] = useState<TimePeriod>('ALL');
+  const [patientStartYear, setPatientStartYear] = useState<string>('ALL');
+  const [patientStartMonth, setPatientStartMonth] = useState<string>('ALL');
+  const [patientStartDate, setPatientStartDate] = useState<string>('');
+  const [patientEndDate, setPatientEndDate] = useState<string>('');
 
   const fetchAppointments = async () => {
     try {
@@ -83,6 +93,17 @@ export default function DoctorDashboardPage() {
   const toggleFilter = (type: FilterType) => {
     setActiveFilter((prev) => (prev === type ? 'ALL' : type));
   };
+
+  // Available years from appointments
+  const availableYears = useMemo(() => {
+    const yearsSet = new Set<number>();
+    yearsSet.add(new Date().getFullYear());
+    completed.forEach((a) => {
+      const y = new Date(a.date).getFullYear();
+      if (!isNaN(y)) yearsSet.add(y);
+    });
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [completed]);
 
   // Filtered Revenue List
   const filteredRevenue = useMemo(() => {
@@ -124,7 +145,7 @@ export default function DoctorDashboardPage() {
     return filteredTotal / filteredRevenue.length;
   }, [filteredRevenue, filteredTotal]);
 
-  // Filtered Completed Patients List
+  // Filtered Completed Patients List with Month/Year & Custom Range
   const filteredCompletedPatients = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -132,7 +153,8 @@ export default function DoctorDashboardPage() {
 
     return completed.filter((a) => {
       const d = new Date(a.date);
-      // Period filter
+
+      // Preset Period filters
       if (patientPeriod === 'THIS_MONTH' && !(d.getFullYear() === currentYear && d.getMonth() === currentMonth)) {
         return false;
       }
@@ -143,6 +165,26 @@ export default function DoctorDashboardPage() {
       }
       if (patientPeriod === 'THIS_YEAR' && d.getFullYear() !== currentYear) {
         return false;
+      }
+
+      // Custom Month & Year Dropdown Filters
+      if (patientStartYear !== 'ALL' && d.getFullYear() !== Number(patientStartYear)) {
+        return false;
+      }
+      if (patientStartMonth !== 'ALL' && d.getMonth() !== Number(patientStartMonth)) {
+        return false;
+      }
+
+      // Custom Date Range Filters (From / To)
+      if (patientStartDate) {
+        const start = new Date(patientStartDate);
+        start.setHours(0, 0, 0, 0);
+        if (d.getTime() < start.getTime()) return false;
+      }
+      if (patientEndDate) {
+        const end = new Date(patientEndDate);
+        end.setHours(23, 59, 59, 999);
+        if (d.getTime() > end.getTime()) return false;
       }
 
       // Search query filter
@@ -156,13 +198,38 @@ export default function DoctorDashboardPage() {
 
       return true;
     });
-  }, [completed, patientPeriod, patientSearch]);
+  }, [completed, patientPeriod, patientStartYear, patientStartMonth, patientStartDate, patientEndDate, patientSearch]);
 
   // Unique Patients Count
   const uniquePatientsCount = useMemo(() => {
     const ids = new Set(filteredCompletedPatients.map((a) => a.patient?.id ?? (a as any).patientId));
     return ids.size;
   }, [filteredCompletedPatients]);
+
+  // Dynamic Period Description Label
+  const getPeriodDescription = () => {
+    if (patientPeriod === 'CUSTOM') {
+      const parts = [];
+      if (patientStartMonth !== 'ALL') parts.push(MONTH_NAMES[Number(patientStartMonth)]);
+      if (patientStartYear !== 'ALL') parts.push(patientStartYear);
+      if (patientStartDate && patientEndDate) {
+        return `Del ${patientStartDate} al ${patientEndDate}`;
+      }
+      if (parts.length > 0) return `Rango: ${parts.join(' ')}`;
+      return 'Rango Personalizado';
+    }
+    return PERIOD_LABELS[patientPeriod];
+  };
+
+  // Reset Patients Filters
+  const resetPatientFilters = () => {
+    setPatientPeriod('ALL');
+    setPatientStartYear('ALL');
+    setPatientStartMonth('ALL');
+    setPatientStartDate('');
+    setPatientEndDate('');
+    setPatientSearch('');
+  };
 
   // Export Patients History CSV
   const exportPatientsCSV = () => {
@@ -278,7 +345,7 @@ export default function DoctorDashboardPage() {
             <div className="text-right">
               <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Período Auditado</p>
               <p className="text-sm font-bold text-neutral-900">
-                {activeFilter === 'COMPLETED' ? PERIOD_LABELS[patientPeriod] : PERIOD_LABELS[timePeriod]}
+                {activeFilter === 'COMPLETED' ? getPeriodDescription() : PERIOD_LABELS[timePeriod]}
               </p>
               <p className="text-neutral-500">
                 {activeFilter === 'COMPLETED' ? `${filteredCompletedPatients.length} consultas registradas` : `${filteredRevenue.length} transacciones registradas`}
@@ -531,7 +598,7 @@ export default function DoctorDashboardPage() {
                         <UserCheck className="h-5 w-5 text-emerald-600" />
                         <h2 className="text-lg font-bold text-neutral-900">Historial de Pacientes Atendidos</h2>
                       </div>
-                      <p className="text-xs text-neutral-400 mt-0.5">Busca expedientes, consulta fichas clínicas y emite reportes de pacientes atendidos</p>
+                      <p className="text-xs text-neutral-400 mt-0.5">Busca expedientes, filtra por rango de mes/año y emite reportes de pacientes atendidos</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -550,50 +617,139 @@ export default function DoctorDashboardPage() {
                     </div>
                   </div>
 
-                  {/* Search input and Period Filters */}
-                  <div className="mt-4 pt-4 border-t border-neutral-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                    {/* Live Search Input */}
-                    <div className="relative flex-1 max-w-md">
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                      <input
-                        type="text"
-                        value={patientSearch}
-                        onChange={(e) => setPatientSearch(e.target.value)}
-                        placeholder="Buscar por paciente, cédula o código (PAT-XXX)..."
-                        className="w-full rounded-xl border border-neutral-200 bg-neutral-50/50 pl-10 pr-4 py-2 text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:border-primary-400 focus:bg-white focus:outline-none transition-all"
-                      />
-                      {patientSearch && (
-                        <button
-                          onClick={() => setPatientSearch('')}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400 hover:text-neutral-600"
-                        >
-                          ✕
-                        </button>
-                      )}
+                  {/* Preset Period Buttons & Search Input */}
+                  <div className="mt-4 pt-4 border-t border-neutral-100 flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                      {/* Live Search Input */}
+                      <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                        <input
+                          type="text"
+                          value={patientSearch}
+                          onChange={(e) => setPatientSearch(e.target.value)}
+                          placeholder="Buscar por paciente, cédula o código (PAT-XXX)..."
+                          className="w-full rounded-xl border border-neutral-200 bg-neutral-50/50 pl-10 pr-4 py-2 text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:border-primary-400 focus:bg-white focus:outline-none transition-all"
+                        />
+                        {patientSearch && (
+                          <button
+                            onClick={() => setPatientSearch('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-neutral-400 hover:text-neutral-600"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Period Quick Presets */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1 hidden sm:inline">Período:</span>
+                        {[
+                          { id: 'ALL' as const, label: 'Todos' },
+                          { id: 'THIS_MONTH' as const, label: 'Este Mes' },
+                          { id: 'LAST_MONTH' as const, label: 'Mes Anterior' },
+                          { id: 'THIS_YEAR' as const, label: 'Este Año' },
+                          { id: 'CUSTOM' as const, label: '🗓️ Rango Personalizado' },
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              setPatientPeriod(p.id);
+                              if (p.id !== 'CUSTOM') {
+                                setPatientStartYear('ALL');
+                                setPatientStartMonth('ALL');
+                                setPatientStartDate('');
+                                setPatientEndDate('');
+                              }
+                            }}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
+                              patientPeriod === p.id
+                                ? 'bg-neutral-900 text-white shadow-sm'
+                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                            }`}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Period filters */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 mr-1 hidden sm:inline">Período:</span>
-                      {[
-                        { id: 'ALL' as const, label: 'Todos' },
-                        { id: 'THIS_MONTH' as const, label: 'Este Mes' },
-                        { id: 'LAST_MONTH' as const, label: 'Mes Anterior' },
-                        { id: 'THIS_YEAR' as const, label: 'Este Año' },
-                      ].map((p) => (
+                    {/* Advanced Custom Range Selector (Visible when CUSTOM or interacting) */}
+                    {(patientPeriod === 'CUSTOM' || patientStartYear !== 'ALL' || patientStartMonth !== 'ALL' || patientStartDate || patientEndDate) && (
+                      <div className="flex flex-wrap items-center gap-3 p-3.5 rounded-xl border border-primary-100 bg-primary-50/30 animate-fade-in">
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-3.5 w-3.5 text-primary-600" />
+                          <span className="text-xs font-bold text-neutral-800 uppercase tracking-wider">Filtrar por Mes / Año / Rango:</span>
+                        </div>
+
+                        {/* Month Selector */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500 font-medium">Mes:</span>
+                          <select
+                            value={patientStartMonth}
+                            onChange={(e) => {
+                              setPatientStartMonth(e.target.value);
+                              setPatientPeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          >
+                            <option value="ALL">Todos los meses</option>
+                            {MONTH_NAMES.map((m, idx) => (
+                              <option key={m} value={idx}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Year Selector */}
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-neutral-500 font-medium">Año:</span>
+                          <select
+                            value={patientStartYear}
+                            onChange={(e) => {
+                              setPatientStartYear(e.target.value);
+                              setPatientPeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          >
+                            <option value="ALL">Todos los años</option>
+                            {availableYears.map((y) => (
+                              <option key={y} value={y}>{y}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Date Range Inputs */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-neutral-500 font-medium">Desde:</span>
+                          <input
+                            type="date"
+                            value={patientStartDate}
+                            onChange={(e) => {
+                              setPatientStartDate(e.target.value);
+                              setPatientPeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          />
+                          <span className="text-xs text-neutral-500 font-medium">Hasta:</span>
+                          <input
+                            type="date"
+                            value={patientEndDate}
+                            onChange={(e) => {
+                              setPatientEndDate(e.target.value);
+                              setPatientPeriod('CUSTOM');
+                            }}
+                            className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-800 focus:border-primary-400 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Reset Filter Button */}
                         <button
-                          key={p.id}
-                          onClick={() => setPatientPeriod(p.id)}
-                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all whitespace-nowrap ${
-                            patientPeriod === p.id
-                              ? 'bg-neutral-900 text-white shadow-sm'
-                              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                          }`}
+                          onClick={resetPatientFilters}
+                          className="ml-auto text-xs font-semibold text-primary-600 hover:text-primary-800 underline"
                         >
-                          {p.label}
+                          Limpiar Filtros
                         </button>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
