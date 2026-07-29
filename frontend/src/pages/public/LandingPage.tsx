@@ -72,7 +72,7 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-5 py-28 sm:px-6 lg:px-8 lg:py-40">
+        <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8 lg:py-32">
           <div className="max-w-3xl">
 
             {/* Badge */}
@@ -140,15 +140,15 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Bottom fade */}
+        {/* Bottom fade — smooth hero → white transition */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, #fafafa)' }}
+          className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+          style={{ background: 'linear-gradient(to bottom, transparent, #ffffff)' }}
         />
       </section>
 
       {/* ── Stats ───────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-16 border-b border-neutral-100">
+      <section className="bg-white py-12 border-b border-neutral-100">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 animate-fade-up">
             {STATS.map((s, i) => (

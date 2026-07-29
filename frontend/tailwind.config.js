@@ -33,7 +33,21 @@ export default {
           900: '#171717',
           950: '#0a0a0a',
         },
-        // Accent — Deep crimson for darkened hero sections
+        // Secondary — Gray & Black (text, borders, secondary surfaces)
+        gray: {
+          25:  '#fcfcfc',
+          50:  '#f9f9f9',
+          100: '#f2f2f2',
+          200: '#e8e8e8',
+          300: '#d1d1d1',
+          400: '#a8a8a8',
+          500: '#737373',
+          600: '#4f4f4f',
+          700: '#3a3a3a',
+          800: '#262626',
+          900: '#141414',
+          950: '#080808',
+        },
         crimson: {
           950: '#1a0008',
           900: '#2d0012',
