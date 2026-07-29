@@ -7,6 +7,8 @@ import {
 import PageLayout from '../../components/layout/PageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import ScheduleManagerModal from '../../components/doctors/ScheduleManagerModal';
+import ServiceManagerModal from '../../components/doctors/ServiceManagerModal';
 import api from '../../lib/api';
 import { useAuth } from '../../hooks/use-auth';
 import { useUIStore } from '../../stores/ui.store';
@@ -23,6 +25,8 @@ export default function DoctorProfilePage() {
   const [bio, setBio] = useState('');
   const [basePrice, setBasePrice] = useState('');
   const [loading, setLoading] = useState(false);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
 
   // Synchronize state dynamically when doctorProfile is fetched or updated
   useEffect(() => {
@@ -232,12 +236,13 @@ export default function DoctorProfilePage() {
                   </div>
                   <h3 className="text-sm font-bold text-neutral-900">Horarios de Atención Configurados</h3>
                 </div>
-                <Link
-                  to="/doctor/schedules"
+                <button
+                  type="button"
+                  onClick={() => setScheduleModalOpen(true)}
                   className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
                 >
                   <Plus className="h-3.5 w-3.5" /> Gestionar
-                </Link>
+                </button>
               </div>
 
               {schedules.length === 0 ? (
@@ -268,12 +273,13 @@ export default function DoctorProfilePage() {
                   </div>
                   <h3 className="text-sm font-bold text-neutral-900">Servicios Médicos Ofrecidos</h3>
                 </div>
-                <Link
-                  to="/doctor/services"
+                <button
+                  type="button"
+                  onClick={() => setServiceModalOpen(true)}
                   className="text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
                 >
                   <Plus className="h-3.5 w-3.5" /> Gestionar
-                </Link>
+                </button>
               </div>
 
               {activeServices.length === 0 ? (
@@ -380,6 +386,16 @@ export default function DoctorProfilePage() {
             </div>
           </form>
         </div>
+
+        {/* Modals for Direct Profile Management */}
+        <ScheduleManagerModal
+          isOpen={scheduleModalOpen}
+          onClose={() => setScheduleModalOpen(false)}
+        />
+        <ServiceManagerModal
+          isOpen={serviceModalOpen}
+          onClose={() => setServiceModalOpen(false)}
+        />
 
       </div>
     </PageLayout>
