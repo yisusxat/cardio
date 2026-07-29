@@ -72,7 +72,7 @@ export default function LandingPage() {
           }}
         />
 
-        <div className="relative mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8 lg:py-32">
+        <div className="relative mx-auto max-w-7xl px-5 pt-20 pb-32 sm:px-6 lg:px-8 lg:pt-32 lg:pb-40">
           <div className="max-w-3xl">
 
             {/* Badge */}
@@ -139,37 +139,31 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-
-        {/* Bottom fade — smooth hero → white transition */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
-          style={{ background: 'linear-gradient(to bottom, transparent, #ffffff)' }}
-        />
       </section>
 
-      {/* ── Stats ───────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-12 border-b border-neutral-100">
-        <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 animate-fade-up">
+      {/* ── Stats — float over hero bottom ─────────────────────────────────── */}
+      <div className="relative z-10 -mt-16 px-5 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {STATS.map((s, i) => (
               <div
                 key={s.label}
-                className="group flex flex-col items-center justify-center rounded-2xl border border-neutral-100 bg-white p-6 text-center shadow-luxury transition-all duration-300 hover:border-primary-200 hover:shadow-luxury-md"
+                className="group flex flex-col items-center justify-center rounded-2xl border border-white/60 bg-white p-6 text-center shadow-luxury-lg transition-all duration-300 hover:shadow-luxury-lg hover:border-primary-100 hover:-translate-y-1 animate-fade-up"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 transition-all duration-300 group-hover:bg-primary-600 group-hover:shadow-red-glow">
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary-50 transition-all duration-300 group-hover:bg-primary-600 group-hover:shadow-red-glow">
                   <s.icon className="h-5 w-5 text-primary-600 transition-colors duration-300 group-hover:text-white" />
                 </div>
-                <p className="text-3xl font-bold text-neutral-900 tracking-tight">{s.value}</p>
-                <p className="mt-1 text-xs font-medium text-neutral-400 text-center leading-tight">{s.label}</p>
+                <p className="text-2xl font-bold text-neutral-900 tracking-tight">{s.value}</p>
+                <p className="mt-1 text-[11px] font-medium text-neutral-400 leading-tight">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ── Why us ──────────────────────────────────────────────────────────── */}
-      <section className="bg-white py-24 border-b border-neutral-100">
+      <section className="bg-white pt-20 pb-24 border-b border-neutral-100">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="section-label mb-5 mx-auto w-fit">
