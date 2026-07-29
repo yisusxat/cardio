@@ -1,3 +1,19 @@
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Archivos de datos o modelos pesados
+*.csv
+*.xlsx
+*.pkl
+*.h5
+
+# Archivos de Python
+__pycache__/
+*.pyc
+
+
 # Global
 node_modules/
 .env
