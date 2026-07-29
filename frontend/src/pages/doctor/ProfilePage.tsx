@@ -1,8 +1,8 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft, Stethoscope, User, Mail, DollarSign, CheckCircle, Shield,
-  Clock, Plus, Settings, Eye,
+  Clock, Plus, Settings, Eye, X, Tag,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import Button from '../../components/ui/Button';
@@ -18,7 +18,8 @@ export default function DoctorProfilePage() {
 
   const doctorProfile = user?.doctorProfile;
 
-  const [specialty, setSpecialty] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [bio, setBio] = useState('');
   const [basePrice, setBasePrice] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,7 +27,16 @@ export default function DoctorProfilePage() {
   // Synchronize state dynamically when doctorProfile is fetched or updated
   useEffect(() => {
     if (doctorProfile) {
-      setSpecialty(doctorProfile.specialty ?? '');
+      if (doctorProfile.specialty) {
+        // Split specialty string by commas or multiple spaces into tags array
+        const initialTags = doctorProfile.specialty
+          .split(/[,]+/)
+          .map((t) => t.trim())
+          .filter(Boolean);
+        setTags(initialTags.length > 0 ? initialTags : [doctorProfile.specialty.trim()]);
+      } else {
+        setTags([]);
+      }
       setBio(doctorProfile.bio ?? '');
       setBasePrice(doctorProfile.basePrice !== undefined ? String(doctorProfile.basePrice) : '');
     }
@@ -51,13 +61,56 @@ export default function DoctorProfilePage() {
 
   const activeServices = services.filter((s) => s.isActive);
 
+  // ── Tag Handlers ─────────────────────────────────────────────────────────────
+  const addTag = (value: string) => {
+    const trimmed = value.trim().replace(/,/g, '');
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed]);
+    }
+    setTagInput('');
+  };
+
+  const removeTag = (indexToRemove: number) => {
+    setTags(tags.filter((_, index) => index !== indexToRemove));
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === ',') {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      removeTag(tags.length - 1);
+    }
+  };
+
+  const handleTagInputBlur = () => {
+    if (tagInput.trim()) {
+      addTag(tagInput);
+    }
+  };
+
+  // ── Form Submission ──────────────────────────────────────────────────────────
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // Include any remaining input as tag before submitting
+    let finalTags = [...tags];
+    if (tagInput.trim() && !finalTags.includes(tagInput.trim())) {
+      finalTags.push(tagInput.trim());
+    }
+
+    if (finalTags.length === 0) {
+      toast.error('Por favor ingresa al menos una especialidad médica');
+      return;
+    }
+
     setLoading(true);
+
+    const joinedSpecialties = finalTags.join(', ');
 
     try {
       await api.patch('/doctors/profile', {
-        specialty: specialty || undefined,
+        specialty: joinedSpecialties,
         bio: bio || undefined,
         basePrice: basePrice ? Number(basePrice) : undefined,
       });
@@ -118,9 +171,19 @@ export default function DoctorProfilePage() {
                 <h1 className="font-display text-2xl font-bold text-neutral-900 sm:text-3xl">
                   Dr(a). {user?.firstName} {user?.lastName}
                 </h1>
-                <p className="mt-1 text-sm text-neutral-400">
-                  {doctorProfile?.specialty ?? 'Especialista en Cardiología'} · CardioCenter
-                </p>
+
+                {/* Tags display in Header */}
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {tags.length > 0 ? (
+                    tags.map((t, idx) => (
+                      <span key={idx} className="rounded-lg border border-primary-100 bg-primary-50 px-2.5 py-0.5 text-xs font-medium text-primary-700">
+                        {t}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-neutral-400">Especialista en Cardiología · CardioCenter</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -241,13 +304,46 @@ export default function DoctorProfilePage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="grid gap-5 sm:grid-cols-2">
-              <Input
-                label="Especialidad Médica"
-                placeholder="Ej. Cardiología Clínica y Electrofisiología"
-                value={specialty}
-                onChange={(e) => setSpecialty(e.target.value)}
-                required
-              />
+
+              {/* ── Interactive Specialty Tag Input ── */}
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-neutral-700">
+                  <Tag className="h-4 w-4 text-primary-500" /> Especialidades Médicas (Etiquetas / Tags)
+                </label>
+                <div
+                  className="min-h-[46px] flex flex-wrap items-center gap-1.5 rounded-xl border border-neutral-200 bg-white p-2.5 transition-all focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-500/15"
+                >
+                  {tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700 animate-scale-up"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(idx)}
+                        className="rounded p-0.5 hover:bg-primary-200 hover:text-primary-900 transition-colors"
+                        title="Eliminar etiqueta"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleTagInputBlur}
+                    placeholder={tags.length === 0 ? "Escribe y presiona Espacio o Enter (Ej. Ecocardiografía)" : "Añadir más..."}
+                    className="flex-1 bg-transparent py-1 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none min-w-[140px]"
+                  />
+                </div>
+                <p className="mt-1 text-[11px] text-neutral-400">
+                  Presiona <span className="font-semibold text-neutral-600">Espacio</span>, <span className="font-semibold text-neutral-600">Coma</span> o <span className="font-semibold text-neutral-600">Enter</span> para convertir la palabra en etiqueta.
+                </p>
+              </div>
 
               <Input
                 label="Precio Base de Consulta ($ USD)"
