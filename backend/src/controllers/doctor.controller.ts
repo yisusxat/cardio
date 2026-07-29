@@ -32,7 +32,7 @@ export const availabilityQuerySchema = z.object({
 });
 
 export const doctorController = {
-  async getAll(req: AuthRequest, res: Response, next: NextFunction) {
+  async getAll(_req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const doctors = await doctorService.getAll();
       sendSuccess(res, doctors);
@@ -52,7 +52,7 @@ export const doctorController = {
 
   async getAvailability(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { date, slotDuration } = req.query as { date: string; slotDuration: number };
+      const { date, slotDuration } = req.query as unknown as { date: string; slotDuration: number };
       const availability = await doctorService.getAvailability(
         req.params.id,
         date,

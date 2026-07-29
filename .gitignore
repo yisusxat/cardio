@@ -36,3 +36,4 @@ frontend/dist/
 # IDE
 .vscode/
 .idea/
+.prisma/

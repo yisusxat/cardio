@@ -11,7 +11,7 @@ export function validate(schema: ZodSchema, source: Source = 'body') {
       return;
     }
     // Mutate to parsed/coerced value
-    (req as Record<string, unknown>)[source] = result.data;
+    (req as unknown as Record<string, unknown>)[source] = result.data;
     next();
   };
 }
