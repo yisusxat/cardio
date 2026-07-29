@@ -61,12 +61,20 @@ export default function DoctorProfilePage() {
         >
           {/* Hero band */}
           <div
-            className="h-32 relative"
-            style={{ background: 'linear-gradient(135deg, #0f0005 0%, #2d000f 50%, #4a0018 100%)' }}
+            className="h-32 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, #9f1239 0%, #e11d48 50%, #f43f5e 100%)' }}
           >
+            {/* Ambient light glow */}
             <div
-              className="pointer-events-none absolute inset-0 opacity-[0.05]"
-              style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+              className="pointer-events-none absolute inset-0 opacity-40"
+              style={{
+                backgroundImage: 'radial-gradient(ellipse 60% 80% at 80% 20%, rgba(255,255,255,0.4) 0%, transparent 70%)',
+              }}
+            />
+            {/* Subtle dot pattern */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-15"
+              style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }}
             />
           </div>
 
