@@ -211,8 +211,22 @@ export default function PatientProfilePage() {
   const [saved, setSaved] = useState(false);
   const [openSection, setOpenSection] = useState<string>("personal");
 
+  // Fetch fresh profile from API on mount to guarantee real-time sync with doctor edits
   useEffect(() => {
-    setForm(profileToForm(user?.patientProfile));
+    fetchMe();
+    api.get("/patients/profile")
+      .then((res) => {
+        if (res.data?.data) {
+          setForm(profileToForm(res.data.data));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (user?.patientProfile) {
+      setForm(profileToForm(user.patientProfile));
+    }
   }, [user?.patientProfile]);
 
   useEffect(() => {
