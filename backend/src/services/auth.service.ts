@@ -100,7 +100,7 @@ export const authService = {
         doctorProfile: {
           include: {
             schedules: { orderBy: { dayOfWeek: 'asc' } },
-            services: { where: { isActive: true }, orderBy: { name: 'asc' } },
+            services: { orderBy: { name: 'asc' } },
           },
         },
       },
