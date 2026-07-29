@@ -1,9 +1,10 @@
-import { Calendar, Clock, User, DollarSign } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User, DollarSign, Star, FileText, Share2 } from 'lucide-react';
 import Badge, { appointmentStatusBadge } from '../ui/Badge';
 import Button from '../ui/Button';
 import { formatDate, formatPrice, formatTime } from '../../lib/utils';
+import { generateGoogleCalendarUrl, downloadICSFile } from '../../lib/calendar.utils';
 
-interface Appointment {
+export interface Appointment {
   id: string;
   date: string;
   startTime: string;
@@ -15,6 +16,10 @@ interface Appointment {
     user: { firstName: string; lastName: string };
     specialty: string;
   };
+  patient?: {
+    firstName: string;
+    lastName: string;
+  };
   services: { id: string; service: { name: string }; priceAtTime: number | string }[];
 }
 
@@ -24,6 +29,8 @@ interface AppointmentCardProps {
   patientName?: string;
   onCancel?: (appointmentId: string) => void;
   onStatusChange?: (appointmentId: string, newStatus: string) => void;
+  onOpenClinicalNote?: (appointment: Appointment) => void;
+  onOpenReview?: (appointment: Appointment) => void;
   loading?: boolean;
 }
 
@@ -33,6 +40,8 @@ export default function AppointmentCard({
   patientName,
   onCancel,
   onStatusChange,
+  onOpenClinicalNote,
+  onOpenReview,
   loading,
 }: AppointmentCardProps) {
   const { variant, label } = appointmentStatusBadge(a.status);
@@ -58,7 +67,7 @@ export default function AppointmentCard({
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2 text-sm font-semibold text-neutral-800">
-              <Calendar className="h-4 w-4 text-primary-500 flex-shrink-0" />
+              <CalendarIcon className="h-4 w-4 text-primary-500 flex-shrink-0" />
               {formatDate(a.date)}
             </div>
             <div className="flex items-center gap-2 text-xs text-neutral-400">
@@ -125,8 +134,69 @@ export default function AppointmentCard({
       </div>
 
       {/* Actions */}
-      {(onCancel || onStatusChange) && (
-        <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-3 flex flex-wrap gap-2">
+      <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* Calendar Export Buttons for confirmed/pending appointments */}
+          {(a.status === 'CONFIRMED' || a.status === 'PENDING') && (
+            <div className="flex gap-1.5">
+              <a
+                href={generateGoogleCalendarUrl({
+                  title: `Cita Médica CardioCenter: Dr(a). ${a.doctor?.user.firstName ?? ''} ${a.doctor?.user.lastName ?? ''}`,
+                  description: `Consulta médica de especialidad en CardioCenter. Razón: ${a.reason ?? 'Consulta Cardiológica'}`,
+                  location: 'CardioCenter — Centro de Cardiología',
+                  dateStr: a.date.split('T')[0],
+                  startTimeStr: a.startTime,
+                  endTimeStr: a.endTime,
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors"
+                title="Añadir a Google Calendar"
+              >
+                <Share2 className="h-3 w-3 text-primary-600" /> Google Calendar
+              </a>
+              <button
+                type="button"
+                onClick={() => downloadICSFile({
+                  title: `Cita Médica CardioCenter: Dr(a). ${a.doctor?.user.firstName ?? ''} ${a.doctor?.user.lastName ?? ''}`,
+                  description: `Consulta médica de especialidad en CardioCenter. Razón: ${a.reason ?? 'Consulta Cardiológica'}`,
+                  location: 'CardioCenter — Centro de Cardiología',
+                  dateStr: a.date.split('T')[0],
+                  startTimeStr: a.startTime,
+                  endTimeStr: a.endTime,
+                })}
+                className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-[11px] font-semibold text-neutral-600 hover:bg-neutral-100 transition-colors"
+                title="Descargar evento .ics (Apple/Outlook)"
+              >
+                .ics
+              </button>
+            </div>
+          )}
+
+          {/* Clinical Note button for doctors */}
+          {viewAs === 'doctor' && onOpenClinicalNote && (
+            <button
+              type="button"
+              onClick={() => onOpenClinicalNote(a)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-[11px] font-semibold text-primary-700 hover:bg-primary-100 transition-colors"
+            >
+              <FileText className="h-3.5 w-3.5" /> Ficha Clínica
+            </button>
+          )}
+
+          {/* Review button for patients when completed */}
+          {viewAs === 'patient' && a.status === 'COMPLETED' && onOpenReview && (
+            <button
+              type="button"
+              onClick={() => onOpenReview(a)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 transition-colors"
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> Dejar Reseña
+            </button>
+          )}
+        </div>
+
+        <div className="flex gap-2">
           {viewAs === 'patient' && onCancel && a.status !== 'CANCELLED' && a.status !== 'COMPLETED' && (
             <Button variant="danger" size="sm" loading={loading} onClick={() => onCancel(a.id)}>
               Cancelar cita
@@ -152,7 +222,7 @@ export default function AppointmentCard({
             </>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

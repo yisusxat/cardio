@@ -9,6 +9,8 @@ import PageLayout from '../../components/layout/PageLayout';
 import DoctorCard from '../../components/doctors/DoctorCard';
 import Button from '../../components/ui/Button';
 import HeartbeatWidget from '../../components/ui/HeartbeatWidget';
+import RiskCalculatorModal from '../../components/ui/RiskCalculatorModal';
+import LiveAvailabilityBadge from '../../components/ui/LiveAvailabilityBadge';
 import { useInView } from '../../hooks/useInView';
 import api from '../../lib/api';
 
@@ -120,6 +122,7 @@ function FadeIn({ children, delay = 0, className = '' }: {
 /* ─── Component ─────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   const [doctors, setDoctors] = useState<unknown[]>([]);
+  const [riskModalOpen, setRiskModalOpen] = useState(false);
 
   useEffect(() => {
     api.get('/doctors').then((r) => setDoctors(r.data.data?.slice(0, 3) ?? [])).catch(() => {});
@@ -161,10 +164,13 @@ export default function LandingPage() {
             {/* ── Left ── */}
             <div className="flex-1 max-w-2xl">
 
-              {/* Pre-title badge */}
-              <div className="section-label-dark mb-7 animate-fade-up inline-flex">
-                <Heart className="h-3.5 w-3.5 text-primary-400 fill-primary-400" />
-                Excelencia en cardiología — Desde 2014
+              {/* Live availability badge & pre-title */}
+              <div className="mb-6 flex flex-wrap items-center gap-3 animate-fade-up">
+                <LiveAvailabilityBadge />
+                <div className="section-label-dark">
+                  <Heart className="h-3.5 w-3.5 text-primary-400 fill-primary-400" />
+                  Excelencia desde 2014
+                </div>
               </div>
 
               <h1
@@ -181,9 +187,8 @@ export default function LandingPage() {
                   }}
                 >
                   tu corazón
-                </span>
-                <br />
-                con excelencia
+                </span>{' '}
+                con la máxima precisión médica.
               </h1>
 
               <p className="animate-fade-up animate-delay-200 mt-6 text-[1.05rem] leading-relaxed text-white/55 max-w-lg">
@@ -684,6 +689,9 @@ export default function LandingPage() {
           </button>
         </Link>
       </div>
+
+      {/* ── Risk Calculator Modal ── */}
+      <RiskCalculatorModal isOpen={riskModalOpen} onClose={() => setRiskModalOpen(false)} />
 
     </PageLayout>
   );

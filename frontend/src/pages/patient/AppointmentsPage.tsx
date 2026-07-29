@@ -2,25 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import AppointmentCard from '../../components/appointments/AppointmentCard';
 import Spinner from '../../components/ui/Spinner';
+import ReviewModal from '../../components/ui/ReviewModal';
 import api from '../../lib/api';
 import { useUIStore } from '../../stores/ui.store';
-
-interface Appointment {
-  id: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  reason?: string | null;
-  status: string;
-  totalAmount: number;
-  doctor: {
-    user: { firstName: string; lastName: string };
-    specialty: string;
-  };
-  services: { id: string; service: { name: string }; priceAtTime: number }[];
-}
+import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
 
 type FilterKey = 'ALL' | 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
 
@@ -38,6 +24,8 @@ export default function PatientAppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('ALL');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   const fetchAppointments = async () => {
     try {
@@ -148,12 +136,23 @@ export default function PatientAppointmentsPage() {
                 appointment={a}
                 viewAs="patient"
                 onCancel={handleCancel}
+                onOpenReview={(app) => { setSelectedAppointment(app); setReviewModalOpen(true); }}
                 loading={cancellingId === a.id}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      {selectedAppointment && (
+        <ReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => { setReviewModalOpen(false); setSelectedAppointment(null); }}
+          doctorName={selectedAppointment.doctor ? `${selectedAppointment.doctor.user.firstName} ${selectedAppointment.doctor.user.lastName}` : 'Especialista'}
+          onSubmitted={() => fetchAppointments()}
+        />
+      )}
     </PageLayout>
   );
 }

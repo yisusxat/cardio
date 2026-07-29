@@ -5,23 +5,12 @@ import {
   ArrowRight, TrendingUp, Heart,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
-import AppointmentCard from '../../components/appointments/AppointmentCard';
+import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
 import Spinner from '../../components/ui/Spinner';
+import ClinicalNoteModal from '../../components/ui/ClinicalNoteModal';
 import api from '../../lib/api';
 import { useAuth } from '../../hooks/use-auth';
 import { useUIStore } from '../../stores/ui.store';
-
-interface Appointment {
-  id: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  reason?: string | null;
-  status: string;
-  totalAmount: number;
-  patient?: { firstName: string; lastName: string };
-  services: { id: string; service: { name: string }; priceAtTime: number }[];
-}
 
 export default function DoctorDashboardPage() {
   const { user } = useAuth();
@@ -29,6 +18,8 @@ export default function DoctorDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
 
   const fetchAppointments = async () => {
     try {
@@ -61,7 +52,7 @@ export default function DoctorDashboardPage() {
   const completed = appointments.filter((a) => a.status === 'COMPLETED');
   const monthRevenue = appointments
     .filter((a) => a.status === 'COMPLETED')
-    .reduce((s, a) => s + (a.totalAmount ?? 0), 0);
+    .reduce((s, a) => s + Number(a.totalAmount ?? 0), 0);
 
   const initials = user ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() : '?';
 
@@ -181,6 +172,7 @@ export default function DoctorDashboardPage() {
                       viewAs="doctor"
                       patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente'}
                       onStatusChange={handleStatusChange}
+                      onOpenClinicalNote={(app) => { setSelectedAppointment(app); setNoteModalOpen(true); }}
                       loading={actionId === a.id}
                     />
                   ))}
@@ -216,6 +208,16 @@ export default function DoctorDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Clinical Note Modal */}
+      {selectedAppointment && (
+        <ClinicalNoteModal
+          isOpen={noteModalOpen}
+          onClose={() => { setNoteModalOpen(false); setSelectedAppointment(null); }}
+          patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : 'Paciente'}
+          dateStr={selectedAppointment.date.split('T')[0]}
+        />
+      )}
     </PageLayout>
   );
 }

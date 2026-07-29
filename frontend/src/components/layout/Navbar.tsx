@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Heart, Menu, X, LogOut, Calendar, LayoutDashboard, ChevronDown, User } from 'lucide-react';
+import { Heart, Menu, X, LogOut, Calendar, LayoutDashboard, ChevronDown, User, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
+import { useTheme } from '../../hooks/use-theme';
 import { cn, getInitials } from '../../lib/utils';
 import Button from '../ui/Button';
 
 export default function Navbar() {
   const { user, isAuthenticated, isDoctor, isPatient, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -79,6 +81,16 @@ export default function Navbar() {
 
           {/* Desktop auth */}
           <div className="hidden items-center gap-3 md:flex">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors"
+              title={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4 text-amber-500" />}
+            </button>
+
             {isAuthenticated && user ? (
               <div className="relative">
                 <button

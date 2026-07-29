@@ -8,6 +8,7 @@ import PageLayout from '../../components/layout/PageLayout';
 import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
 import BookingWizard from '../../components/appointments/BookingWizard';
+import StripePaymentModal from '../../components/ui/StripePaymentModal';
 import Spinner from '../../components/ui/Spinner';
 import { formatPrice, getDayName, getInitials } from '../../lib/utils';
 import api from '../../lib/api';
@@ -38,6 +39,7 @@ export default function DoctorDetailPage() {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [payModalOpen, setPayModalOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -290,10 +292,20 @@ export default function DoctorDetailPage() {
         <BookingWizard
           doctorId={doctor.id}
           services={activeServices}
-          onSuccess={() => { setBookingOpen(false); navigate('/patient/appointments'); }}
+          onSuccess={() => { setBookingOpen(false); setPayModalOpen(true); }}
           onCancel={() => setBookingOpen(false)}
         />
       </Modal>
+
+      {/* Stripe Payment Modal */}
+      <StripePaymentModal
+        isOpen={payModalOpen}
+        onClose={() => { setPayModalOpen(false); navigate('/patient/appointments'); }}
+        amount={Number(doctor.basePrice)}
+        doctorName={name}
+        onSuccess={() => navigate('/patient/appointments')}
+      />
+
     </PageLayout>
   );
 }
