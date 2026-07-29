@@ -13,13 +13,13 @@ const variantClasses = {
   secondary: 'btn-secondary',
   ghost: 'btn-ghost',
   danger:
-    'inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed',
+    'inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-red-glow transition-all duration-300 hover:bg-primary-700 hover:shadow-red-glow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none',
 };
 
 const sizeClasses = {
-  sm: 'px-3 py-1.5 text-xs',
+  sm: 'px-3.5 py-2 text-xs',
   md: '',
-  lg: 'px-6 py-3 text-base',
+  lg: 'px-7 py-3.5 text-base',
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
