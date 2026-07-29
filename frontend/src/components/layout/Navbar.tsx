@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Heart, Menu, X, LogOut, Calendar, LayoutDashboard, ChevronDown, User, Sun, Moon } from 'lucide-react';
+import { Heart, Menu, X, LogOut, Calendar, LayoutDashboard, ChevronDown, User, Sun, Moon, Clock, Settings } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
 import { useTheme } from '../../hooks/use-theme';
 import { cn, getInitials } from '../../lib/utils';
@@ -121,12 +121,26 @@ export default function Navbar() {
                         <LayoutDashboard className="h-4 w-4 text-neutral-400" /> Dashboard
                       </button>
                       {isDoctor && (
-                        <button
-                          onClick={() => { navigate('/doctor/profile'); setDropdownOpen(false); }}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
-                        >
-                          <User className="h-4 w-4 text-neutral-400" /> Mi Perfil
-                        </button>
+                        <>
+                          <button
+                            onClick={() => { navigate('/doctor/profile'); setDropdownOpen(false); }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+                          >
+                            <User className="h-4 w-4 text-neutral-400" /> Mi Perfil
+                          </button>
+                          <button
+                            onClick={() => { navigate('/doctor/schedules'); setDropdownOpen(false); }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+                          >
+                            <Clock className="h-4 w-4 text-neutral-400" /> Mis Horarios
+                          </button>
+                          <button
+                            onClick={() => { navigate('/doctor/services'); setDropdownOpen(false); }}
+                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+                          >
+                            <Settings className="h-4 w-4 text-neutral-400" /> Mis Servicios
+                          </button>
+                        </>
                       )}
                       {isPatient && (
                         <>

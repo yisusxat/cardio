@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar, Clock, CheckCircle, Users, ArrowRight,
-  Heart, User, Settings, TrendingUp,
+  Heart, Settings, TrendingUp,
 } from 'lucide-react';
 import PageLayout from '../../components/layout/PageLayout';
 import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
@@ -65,11 +65,11 @@ export default function DoctorDashboardPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div
-              className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white"
-              style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', boxShadow: '0 4px 20px -4px rgba(0,0,0,0.3)' }}
+              className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-md"
+              style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)' }}
             >
               {initials}
             </div>
@@ -80,27 +80,6 @@ export default function DoctorDashboardPage() {
               </h1>
               <p className="text-sm text-neutral-400">Gestión de agenda y consultas activas</p>
             </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2.5">
-            <Link to="/doctor/profile">
-              <button className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-200"
-                style={{ boxShadow: '0 2px 8px -2px rgba(0,0,0,0.06)' }}>
-                <User className="h-4 w-4" /> Mi Perfil
-              </button>
-            </Link>
-            <Link to="/doctor/schedules">
-              <button className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-200"
-                style={{ boxShadow: '0 2px 8px -2px rgba(0,0,0,0.06)' }}>
-                <Clock className="h-4 w-4" /> Horarios
-              </button>
-            </Link>
-            <Link to="/doctor/services">
-              <button className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-700 hover:border-neutral-300 hover:bg-neutral-50 transition-all duration-200"
-                style={{ boxShadow: '0 2px 8px -2px rgba(0,0,0,0.06)' }}>
-                <Settings className="h-4 w-4" /> Servicios
-              </button>
-            </Link>
           </div>
         </div>
 
