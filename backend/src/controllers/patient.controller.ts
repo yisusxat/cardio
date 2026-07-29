@@ -1,9 +1,9 @@
-import { Response, NextFunction } from "express";
+﻿import { Response, NextFunction } from "express";
 import { z } from "zod";
 import { prisma } from "../config/prisma";
 import { sendSuccess } from "../utils/api-response";
 import { AuthRequest } from "../middlewares/auth.middleware";
-import { NotFoundError } from "../utils/errors";
+import { NotFoundError, ForbiddenError } from "../utils/errors";
 
 const genderEnum = z.enum(["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"]);
 const bloodTypeEnum = z.enum(["A_POS", "A_NEG", "B_POS", "B_NEG", "AB_POS", "AB_NEG", "O_POS", "O_NEG"]);
@@ -24,6 +24,16 @@ export const patientProfileSchema = z.object({
   emergencyContactName: z.string().max(100).optional().nullable(),
   emergencyContactPhone: z.string().max(20).optional().nullable(),
 });
+
+/** Returns true when a patient has the minimum administrative record filled */
+export async function hasAdminProfile(patientUserId: string): Promise<boolean> {
+  const profile = await prisma.patientProfile.findUnique({
+    where: { userId: patientUserId },
+    select: { phone: true, dateOfBirth: true, gender: true },
+  });
+  if (!profile) return false;
+  return !!(profile.phone || profile.dateOfBirth || profile.gender);
+}
 
 export const patientController = {
   async getProfile(req: AuthRequest, res: Response, next: NextFunction) {
@@ -57,6 +67,36 @@ export const patientController = {
       });
 
       sendSuccess(res, profile, 200, "Profile updated successfully");
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async upsertPatientAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (req.user!.role !== "DOCTOR" && req.user!.role !== "ADMIN") {
+        throw new ForbiddenError();
+      }
+      const { patientId } = req.params;
+      const patient = await prisma.user.findUnique({ where: { id: patientId } });
+      if (!patient) throw new NotFoundError("Patient");
+
+      const data = patientProfileSchema.parse(req.body);
+
+      const profile = await prisma.patientProfile.upsert({
+        where: { userId: patientId },
+        create: {
+          userId: patientId,
+          ...data,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+        },
+        update: {
+          ...data,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+        },
+      });
+
+      sendSuccess(res, profile, 200, "Patient administrative profile updated");
     } catch (err) {
       next(err);
     }

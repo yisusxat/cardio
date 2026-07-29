@@ -8,6 +8,7 @@ import PageLayout from '../../components/layout/PageLayout';
 import AppointmentCard, { Appointment } from '../../components/appointments/AppointmentCard';
 import Spinner from '../../components/ui/Spinner';
 import ClinicalNoteModal from '../../components/ui/ClinicalNoteModal';
+import PatientAdminModal from '../../components/ui/PatientAdminModal';
 import api from '../../lib/api';
 import { useAuth } from '../../hooks/use-auth';
 import { useUIStore } from '../../stores/ui.store';
@@ -20,6 +21,9 @@ export default function DoctorDashboardPage() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [savedNotes, setSavedNotes] = useState<Record<string, boolean>>({});
+  const [savedAdmins, setSavedAdmins] = useState<Record<string, boolean>>({});
 
   const fetchAppointments = async () => {
     try {
@@ -179,6 +183,9 @@ export default function DoctorDashboardPage() {
                       patientName={a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'Paciente'}
                       onStatusChange={handleStatusChange}
                       onOpenClinicalNote={(app) => { setSelectedAppointment(app); setNoteModalOpen(true); }}
+                      onOpenPatientAdmin={(app) => { setSelectedAppointment(app); setAdminModalOpen(true); }}
+                      clinicalNoteSaved={!!savedNotes[a.id]}
+                      patientAdminSaved={!!savedAdmins[a.id] || !!a.patient?.patientProfile?.dateOfBirth}
                       loading={actionId === a.id}
                     />
                   ))}
@@ -222,6 +229,27 @@ export default function DoctorDashboardPage() {
           onClose={() => { setNoteModalOpen(false); setSelectedAppointment(null); }}
           patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : 'Paciente'}
           dateStr={selectedAppointment.date.split('T')[0]}
+          onSaved={() => {
+            if (selectedAppointment) {
+              setSavedNotes((prev) => ({ ...prev, [selectedAppointment.id]: true }));
+            }
+          }}
+        />
+      )}
+
+      {/* Patient Admin Modal */}
+      {selectedAppointment && (
+        <PatientAdminModal
+          isOpen={adminModalOpen}
+          onClose={() => { setAdminModalOpen(false); setSelectedAppointment(null); }}
+          patientId={selectedAppointment.patient ? (selectedAppointment.patient as any).id ?? (selectedAppointment as any).patientId : ''}
+          patientName={selectedAppointment.patient ? `${selectedAppointment.patient.firstName} ${selectedAppointment.patient.lastName}` : 'Paciente'}
+          onSaved={() => {
+            if (selectedAppointment) {
+              setSavedAdmins((prev) => ({ ...prev, [selectedAppointment.id]: true }));
+            }
+            fetchAppointments();
+          }}
         />
       )}
     </PageLayout>

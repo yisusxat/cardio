@@ -9,9 +9,10 @@ interface ClinicalNoteModalProps {
   onClose: () => void;
   patientName: string;
   dateStr: string;
+  onSaved?: () => void;
 }
 
-export default function ClinicalNoteModal({ isOpen, onClose, patientName, dateStr }: ClinicalNoteModalProps) {
+export default function ClinicalNoteModal({ isOpen, onClose, patientName, dateStr, onSaved }: ClinicalNoteModalProps) {
   const toast = useUIStore();
   const [diagnosis, setDiagnosis] = useState('');
   const [treatment, setTreatment] = useState('');
@@ -24,6 +25,7 @@ export default function ClinicalNoteModal({ isOpen, onClose, patientName, dateSt
     e.preventDefault();
     setSaved(true);
     toast.success(`Ficha clínica guardada para ${patientName}`);
+    onSaved?.();
   };
 
   const handlePrint = () => {

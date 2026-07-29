@@ -31,7 +31,10 @@ interface AppointmentCardProps {
   onCancel?: (appointmentId: string) => void;
   onStatusChange?: (appointmentId: string, newStatus: string) => void;
   onOpenClinicalNote?: (appointment: Appointment) => void;
+  onOpenPatientAdmin?: (appointment: Appointment) => void;
   onOpenReview?: (appointment: Appointment) => void;
+  clinicalNoteSaved?: boolean;
+  patientAdminSaved?: boolean;
   loading?: boolean;
 }
 
@@ -42,7 +45,10 @@ export default function AppointmentCard({
   onCancel,
   onStatusChange,
   onOpenClinicalNote,
+  onOpenPatientAdmin,
   onOpenReview,
+  clinicalNoteSaved = false,
+  patientAdminSaved = false,
   loading,
 }: AppointmentCardProps) {
   const { variant, label } = appointmentStatusBadge(a.status);
@@ -196,15 +202,41 @@ export default function AppointmentCard({
             </div>
           )}
 
-          {/* Clinical Note button for doctors */}
-          {viewAs === 'doctor' && onOpenClinicalNote && (
-            <button
-              type="button"
-              onClick={() => onOpenClinicalNote(a)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-[11px] font-semibold text-primary-700 hover:bg-primary-100 transition-colors"
-            >
-              <FileText className="h-3.5 w-3.5" /> Ficha Clínica
-            </button>
+          {/* Ficha Paciente (Administrativa) & Ficha Clínica buttons for doctors */}
+          {viewAs === 'doctor' && (
+            <div className="flex flex-wrap gap-2">
+              {/* Ficha Paciente (solo si el paciente no tiene ficha registrada o ya la guardó el doctor) */}
+              {(!a.patient?.patientProfile?.dateOfBirth || patientAdminSaved) && onOpenPatientAdmin && (
+                <button
+                  type="button"
+                  onClick={() => onOpenPatientAdmin(a)}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+                    patientAdminSaved
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 animate-pulse'
+                  }`}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  Ficha Paciente {patientAdminSaved ? '✓' : '❗'}
+                </button>
+              )}
+
+              {/* Ficha Clínica */}
+              {onOpenClinicalNote && (
+                <button
+                  type="button"
+                  onClick={() => onOpenClinicalNote(a)}
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition-colors ${
+                    clinicalNoteSaved
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100'
+                  }`}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Ficha Clínica {clinicalNoteSaved ? '✓' : '❗'}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Review button for patients when completed */}
@@ -232,11 +264,25 @@ export default function AppointmentCard({
                   Confirmar
                 </Button>
               )}
-              {a.status === 'CONFIRMED' && (
-                <Button size="sm" loading={loading} onClick={() => onStatusChange(a.id, 'COMPLETED')}>
-                  Completar
-                </Button>
-              )}
+              {a.status === 'CONFIRMED' && (() => {
+                const needsAdminForm = !a.patient?.patientProfile?.dateOfBirth;
+                const canComplete = clinicalNoteSaved && (!needsAdminForm || patientAdminSaved);
+                return (
+                  <Button
+                    size="sm"
+                    loading={loading}
+                    disabled={!canComplete}
+                    onClick={() => onStatusChange(a.id, 'COMPLETED')}
+                    title={
+                      !canComplete
+                        ? 'Debe llenar la Ficha Clínica' + (needsAdminForm && !patientAdminSaved ? ' y la Ficha Paciente' : '') + ' antes de completar'
+                        : ''
+                    }
+                  >
+                    Completar
+                  </Button>
+                );
+              })()}
               {(a.status === 'PENDING' || a.status === 'CONFIRMED') && (
                 <Button variant="danger" size="sm" loading={loading} onClick={() => onStatusChange(a.id, 'CANCELLED')}>
                   Cancelar

@@ -1,6 +1,7 @@
 import { prisma } from '../config/prisma';
 import { AppointmentStatus, UserRole } from '@prisma/client';
 import { NotFoundError, ValidationError, ForbiddenError } from '../utils/errors';
+import { hasAdminProfile } from '../controllers/patient.controller';
 
 function toMinutes(time: string): number {
   const [h, m] = time.split(':').map(Number);
@@ -176,6 +177,16 @@ export const appointmentService = {
     const appointment = await prisma.appointment.findUnique({ where: { id: appointmentId } });
     if (!appointment) throw new NotFoundError('Appointment');
     if (appointment.doctorId !== doctor.id) throw new ForbiddenError();
+
+    // When marking as COMPLETED, patient must have an administrative profile filled
+    if (status === AppointmentStatus.COMPLETED) {
+      const profileOk = await hasAdminProfile(appointment.patientId);
+      if (!profileOk) {
+        throw new ValidationError(
+          'No se puede completar la cita: el paciente no tiene Ficha Administrativa. El doctor debe llenarla primero.',
+        );
+      }
+    }
 
     return prisma.appointment.update({
       where: { id: appointmentId },

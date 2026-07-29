@@ -1,0 +1,237 @@
+import { useState, useEffect } from "react";
+import {
+  User, Droplets, Activity,
+  AlertTriangle, Users, CheckCircle,
+} from "lucide-react";
+import Modal from "./Modal";
+import Button from "./Button";
+import Input from "./Input";
+import { useUIStore } from "../../stores/ui.store";
+import api from "../../lib/api";
+
+type Gender = "MALE" | "FEMALE" | "OTHER" | "PREFER_NOT_TO_SAY";
+type BloodType = "A_POS" | "A_NEG" | "B_POS" | "B_NEG" | "AB_POS" | "AB_NEG" | "O_POS" | "O_NEG";
+type AlcoholConsumption = "NONE" | "OCCASIONAL" | "MODERATE" | "HEAVY";
+
+const GENDER_OPTIONS: { value: Gender; label: string }[] = [
+  { value: "MALE", label: "Masculino" },
+  { value: "FEMALE", label: "Femenino" },
+  { value: "OTHER", label: "Otro" },
+  { value: "PREFER_NOT_TO_SAY", label: "Prefiero no decirlo" },
+];
+const BLOOD_OPTIONS: { value: BloodType; label: string }[] = [
+  { value: "A_POS", label: "A+" }, { value: "A_NEG", label: "A-" },
+  { value: "B_POS", label: "B+" }, { value: "B_NEG", label: "B-" },
+  { value: "AB_POS", label: "AB+" }, { value: "AB_NEG", label: "AB-" },
+  { value: "O_POS", label: "O+" }, { value: "O_NEG", label: "O-" },
+];
+const ALCOHOL_OPTIONS: { value: AlcoholConsumption; label: string }[] = [
+  { value: "NONE", label: "No consume" },
+  { value: "OCCASIONAL", label: "Ocasional" },
+  { value: "MODERATE", label: "Moderado" },
+  { value: "HEAVY", label: "Frecuente" },
+];
+
+interface PatientAdminModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  patientId: string;
+  patientName: string;
+  onSaved: () => void;
+}
+
+interface FormState {
+  phone: string;
+  dateOfBirth: string;
+  gender: string;
+  bloodType: string;
+  weightKg: string;
+  heightCm: string;
+  allergies: string;
+  chronicConditions: string;
+  currentMedications: string;
+  smoker: boolean | null;
+  alcoholConsumption: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+}
+
+const EMPTY: FormState = {
+  phone: "", dateOfBirth: "", gender: "", bloodType: "",
+  weightKg: "", heightCm: "", allergies: "", chronicConditions: "",
+  currentMedications: "", smoker: null, alcoholConsumption: "",
+  emergencyContactName: "", emergencyContactPhone: "",
+};
+
+function SelectField({ label, id, value, onChange, options, placeholder }: {
+  label: string; id: string; value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{label}</label>
+      <select
+        id={id} value={value} onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all"
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, accent }: { icon: React.ElementType; title: string; accent: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: accent }}>
+        <Icon className="h-3.5 w-3.5 text-white" />
+      </div>
+      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">{title}</span>
+    </div>
+  );
+}
+
+export default function PatientAdminModal({
+  isOpen, onClose, patientId, patientName, onSaved,
+}: PatientAdminModalProps) {
+  const toast = useUIStore();
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [saving, setSaving] = useState(false);
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) setForm(EMPTY);
+  }, [isOpen, patientId]);
+
+  const set = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm((f) => ({ ...f, [field]: e.target.value }));
+  };
+  const setVal = (field: keyof FormState) => (v: string | boolean | null) => {
+    setForm((f) => ({ ...f, [field]: v }));
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.put(`/patients/admin/${patientId}`, {
+        phone: form.phone || null,
+        dateOfBirth: form.dateOfBirth || null,
+        gender: form.gender || null,
+        bloodType: form.bloodType || null,
+        weightKg: form.weightKg ? parseFloat(form.weightKg) : null,
+        heightCm: form.heightCm ? parseFloat(form.heightCm) : null,
+        allergies: form.allergies || null,
+        chronicConditions: form.chronicConditions || null,
+        currentMedications: form.currentMedications || null,
+        smoker: form.smoker,
+        alcoholConsumption: form.alcoholConsumption || null,
+        emergencyContactName: form.emergencyContactName || null,
+        emergencyContactPhone: form.emergencyContactPhone || null,
+      });
+      toast.success(`Ficha administrativa de ${patientName} guardada`);
+      onSaved();
+      onClose();
+    } catch {
+      toast.error("No se pudo guardar la ficha administrativa");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={`Ficha Paciente: ${patientName}`} size="lg">
+      <form onSubmit={handleSave} className="flex flex-col gap-5">
+
+        {/* Notice banner */}
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold text-amber-800">Ficha Administrativa Requerida</p>
+            <p className="mt-0.5 text-xs text-amber-700">
+              Este paciente no tiene datos administrativos registrados. Por favor complete al menos los campos básicos para poder marcar la cita como completada.
+            </p>
+          </div>
+        </div>
+
+        {/* A. Datos Personales */}
+        <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4">
+          <SectionHeader icon={User} title="Datos Personales" accent="linear-gradient(135deg,#2563eb,#1d4ed8)" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Teléfono *" id="adm-phone" type="tel" placeholder="+58 414 000 0000" value={form.phone} onChange={set("phone")} required />
+            <Input label="Fecha de nacimiento *" id="adm-dob" type="date" value={form.dateOfBirth} onChange={set("dateOfBirth")} required />
+            <SelectField label="Género *" id="adm-gender" value={form.gender} onChange={setVal("gender")} placeholder="Seleccionar..." options={GENDER_OPTIONS} />
+          </div>
+        </div>
+
+        {/* B. Datos Clínicos básicos */}
+        <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4">
+          <SectionHeader icon={Activity} title="Datos Clínicos Básicos" accent="linear-gradient(135deg,#0891b2,#0e7490)" />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <SelectField label="Tipo de sangre" id="adm-blood" value={form.bloodType} onChange={setVal("bloodType")} placeholder="Seleccionar..." options={BLOOD_OPTIONS} />
+            <Input label="Peso (kg)" id="adm-weight" type="number" placeholder="70" value={form.weightKg} onChange={set("weightKg")} />
+            <Input label="Talla (cm)" id="adm-height" type="number" placeholder="170" value={form.heightCm} onChange={set("heightCm")} />
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <SelectField label="Consumo de alcohol" id="adm-alcohol" value={form.alcoholConsumption} onChange={setVal("alcoholConsumption")} placeholder="Seleccionar..." options={ALCOHOL_OPTIONS} />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">¿Fumador/a?</label>
+              <div className="flex gap-2 pt-1">
+                {[true, false].map((b) => (
+                  <button key={String(b)} type="button"
+                    onClick={() => setVal("smoker")(form.smoker === b ? null : b)}
+                    className="rounded-lg px-4 py-2 text-xs font-semibold transition-all border"
+                    style={{
+                      background: form.smoker === b ? (b ? "linear-gradient(135deg,#e11d48,#9f1239)" : "#f3f4f6") : "white",
+                      color: form.smoker === b ? (b ? "white" : "#374151") : "#9ca3af",
+                      borderColor: form.smoker === b ? "transparent" : "#e5e7eb",
+                    }}
+                  >{b ? "Sí" : "No"}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* C. Antecedentes */}
+        <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4">
+          <SectionHeader icon={Droplets} title="Antecedentes Médicos" accent="linear-gradient(135deg,#d97706,#b45309)" />
+          <div className="flex flex-col gap-3">
+            {[
+              { field: "allergies" as const, label: "Alergias conocidas", placeholder: "Ej: Penicilina, látex..." },
+              { field: "chronicConditions" as const, label: "Condiciones crónicas", placeholder: "Ej: Hipertensión, diabetes..." },
+              { field: "currentMedications" as const, label: "Medicamentos actuales", placeholder: "Ej: Losartán 50mg..." },
+            ].map(({ field, label, placeholder }) => (
+              <div key={field} className="flex flex-col gap-1.5">
+                <label htmlFor={field} className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{label}</label>
+                <textarea id={field} rows={2} placeholder={placeholder} value={form[field] as string} onChange={set(field)}
+                  className="w-full resize-none rounded-xl border border-neutral-200 px-3.5 py-2.5 text-sm text-neutral-800 placeholder-neutral-300 focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100 transition-all bg-white"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* D. Emergencia */}
+        <div className="rounded-2xl border border-neutral-100 bg-neutral-50 p-4">
+          <SectionHeader icon={Users} title="Contacto de Emergencia" accent="linear-gradient(135deg,#dc2626,#b91c1c)" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Nombre del contacto" id="adm-ec-name" placeholder="Ana García" value={form.emergencyContactName} onChange={set("emergencyContactName")} />
+            <Input label="Teléfono del contacto" id="adm-ec-phone" type="tel" placeholder="+58 412 000 0000" value={form.emergencyContactPhone} onChange={set("emergencyContactPhone")} />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-3">
+          <Button variant="secondary" type="button" onClick={onClose}>Cancelar</Button>
+          <Button type="submit" loading={saving}>
+            <CheckCircle className="h-4 w-4" /> Guardar Ficha Paciente
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
