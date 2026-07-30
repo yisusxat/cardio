@@ -1,1 +1,1 @@
-fix(deps): update @remix-run/router to 1.23.2 to resolve Dependabot alert #20
+fix(deps): update brace-expansion to 2.1.2 to resolve Dependabot alert #23 exponential-time DoS
