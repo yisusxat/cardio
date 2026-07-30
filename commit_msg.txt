@@ -1,0 +1,1 @@
+fix(deps): update vite, react-router-dom and esbuild to patched versions
