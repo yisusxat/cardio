@@ -1,1 +1,1 @@
-fix(deps): pin react-router and react-router-dom to 6.28.2 to avoid vulnerable 7.2.0-7.5.1 SPA cache poisoning range in Dependabot alert #28
+fix(deps): unify workspace on pnpm, remove package-lock.json and upgrade react-router to 7.18.2 to resolve all Dependabot alerts
