@@ -666,9 +666,9 @@ export default function LandingPage() {
           <div className="border-t border-neutral-100 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-neutral-400">© {new Date().getFullYear()} CardioCenter. Todos los derechos reservados.</p>
             <div className="flex gap-5">
-              {['Privacidad', 'Términos', 'Cookies'].map((l) => (
-                <span key={l} className="text-xs text-neutral-400 hover:text-neutral-600 cursor-pointer transition-colors">{l}</span>
-              ))}
+              <Link to="/privacy" className="text-xs text-neutral-400 hover:text-primary-600 transition-colors">Privacidad</Link>
+              <Link to="/terms" className="text-xs text-neutral-400 hover:text-primary-600 transition-colors">Términos</Link>
+              <Link to="/cookies" className="text-xs text-neutral-400 hover:text-primary-600 transition-colors">Cookies</Link>
             </div>
           </div>
         </div>

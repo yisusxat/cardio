@@ -8,6 +8,9 @@ import DoctorsPage from './pages/public/DoctorsPage';
 import DoctorDetailPage from './pages/public/DoctorDetailPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import PrivacyPage from './pages/public/PrivacyPage';
+import TermsPage from './pages/public/TermsPage';
+import CookiesPage from './pages/public/CookiesPage';
 
 // Patient Pages
 import PatientDashboardPage from './pages/patient/DashboardPage';
@@ -49,6 +52,9 @@ export default function App() {
       <Route path="/doctors/:id" element={<DoctorDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/cookies" element={<CookiesPage />} />
 
       {/* Patient Protected Routes */}
       <Route
