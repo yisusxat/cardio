@@ -20,12 +20,27 @@ export const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
+import { logAuditEvent } from '../utils/audit-logger';
+
 export const authController = {
   async register(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const result = await authService.register(req.body);
+      logAuditEvent({
+        action: 'USER_REGISTER',
+        userId: result.user.id,
+        userRole: result.user.role,
+        status: 'SUCCESS',
+        req,
+      });
       sendSuccess(res, result, 201, 'Registration successful');
     } catch (err) {
+      logAuditEvent({
+        action: 'USER_REGISTER',
+        status: 'FAILED',
+        details: { email: req.body?.email },
+        req,
+      });
       next(err);
     }
   },
@@ -33,8 +48,21 @@ export const authController = {
   async login(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const result = await authService.login(req.body.email, req.body.password);
+      logAuditEvent({
+        action: 'USER_LOGIN',
+        userId: result.user.id,
+        userRole: result.user.role,
+        status: 'SUCCESS',
+        req,
+      });
       sendSuccess(res, result, 200, 'Login successful');
     } catch (err) {
+      logAuditEvent({
+        action: 'USER_LOGIN',
+        status: 'FAILED',
+        details: { email: req.body?.email },
+        req,
+      });
       next(err);
     }
   },
@@ -48,8 +76,14 @@ export const authController = {
     }
   },
 
-  async logout(_req: AuthRequest, res: Response) {
-    // Stateless JWT — client removes tokens; server just confirms
+  async logout(req: AuthRequest, res: Response) {
+    logAuditEvent({
+      action: 'USER_LOGOUT',
+      userId: req.user?.id,
+      userRole: req.user?.role,
+      status: 'SUCCESS',
+      req,
+    });
     sendSuccess(res, null, 200, 'Logged out successfully');
   },
 

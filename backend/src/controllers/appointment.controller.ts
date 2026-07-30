@@ -22,6 +22,8 @@ export const updateStatusSchema = z.object({
   ]),
 });
 
+import { logAuditEvent } from '../utils/audit-logger';
+
 export const appointmentController = {
   async getMine(req: AuthRequest, res: Response, next: NextFunction) {
     try {
@@ -46,8 +48,24 @@ export const appointmentController = {
         patientId: req.user!.id,
         ...req.body,
       });
+      logAuditEvent({
+        action: 'APPOINTMENT_CREATE',
+        userId: req.user!.id,
+        userRole: req.user!.role,
+        resourceId: appointment.id,
+        status: 'SUCCESS',
+        details: { doctorId: req.body.doctorId, date: req.body.date },
+        req,
+      });
       sendSuccess(res, appointment, 201, 'Appointment created');
     } catch (err) {
+      logAuditEvent({
+        action: 'APPOINTMENT_CREATE',
+        userId: req.user?.id,
+        userRole: req.user?.role,
+        status: 'FAILED',
+        req,
+      });
       next(err);
     }
   },
@@ -59,8 +77,24 @@ export const appointmentController = {
         req.user!.id,
         req.body.status,
       );
+      logAuditEvent({
+        action: `APPOINTMENT_STATUS_${req.body.status}`,
+        userId: req.user!.id,
+        userRole: req.user!.role,
+        resourceId: appointment.id,
+        status: 'SUCCESS',
+        req,
+      });
       sendSuccess(res, appointment);
     } catch (err) {
+      logAuditEvent({
+        action: 'APPOINTMENT_STATUS_UPDATE',
+        userId: req.user?.id,
+        userRole: req.user?.role,
+        resourceId: req.params.id,
+        status: 'FAILED',
+        req,
+      });
       next(err);
     }
   },
@@ -68,8 +102,24 @@ export const appointmentController = {
   async cancel(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       await appointmentService.cancelByPatient(req.params.id, req.user!.id);
+      logAuditEvent({
+        action: 'APPOINTMENT_CANCEL',
+        userId: req.user!.id,
+        userRole: req.user!.role,
+        resourceId: req.params.id,
+        status: 'SUCCESS',
+        req,
+      });
       sendSuccess(res, null, 200, 'Appointment cancelled');
     } catch (err) {
+      logAuditEvent({
+        action: 'APPOINTMENT_CANCEL',
+        userId: req.user?.id,
+        userRole: req.user?.role,
+        resourceId: req.params.id,
+        status: 'FAILED',
+        req,
+      });
       next(err);
     }
   },
