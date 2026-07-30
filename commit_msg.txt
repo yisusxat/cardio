@@ -1,1 +1,1 @@
-fix(deps): lock @remix-run/router to 1.23.2 in package-lock.json to resolve Dependabot alert #25
+fix(deps): pin react-router and react-router-dom to 7.2.0 to resolve Dependabot alert #27 RSC CSRF bypass
