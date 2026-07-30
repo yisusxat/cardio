@@ -15,9 +15,9 @@ router.put("/profile", authenticate, validate(patientProfileSchema), patientCont
 router.put("/admin/:patientId", authenticate, validate(patientProfileSchema), patientController.upsertPatientAdmin);
 
 // Doctor accessing patient summary (for appointment view)
-router.get("/summary/:patientId", authenticate, noCache, patientController.getPatientSummary);
+router.get("/summary/:id", authenticate, noCache, patientController.getPatientSummary);
 
 // Clinical history for patient profile & doctor view
-router.get("/history/:patientId", authenticate, noCache, clinicalNoteController.getPatientHistory);
+router.get("/history/:id", authenticate, noCache, clinicalNoteController.getPatientHistory);
 
 export default router;

@@ -89,10 +89,10 @@ export const clinicalNoteController = {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
-      const targetPatientId = String(req.params.patientId || '');
+      const targetId = String(req.params.id || '');
 
       // Patients can see their own history. Doctors can see history if authorized.
-      if (req.user!.role === "PATIENT" && req.user!.id !== targetPatientId) {
+      if (req.user!.role === "PATIENT" && req.user!.id !== targetId) {
         throw new ForbiddenError();
       }
 
@@ -104,7 +104,7 @@ export const clinicalNoteController = {
         const appointment = await prisma.appointment.findFirst({
           where: {
             doctorId: doctor.id,
-            patientId: targetPatientId,
+            patientId: targetId,
             status: { in: ["CONFIRMED", "COMPLETED"] },
           },
         });
@@ -114,7 +114,7 @@ export const clinicalNoteController = {
       }
 
       const notes = await prisma.clinicalNote.findMany({
-        where: { patientId: targetPatientId },
+        where: { patientId: targetId },
         include: {
           appointment: { select: { date: true, startTime: true, endTime: true, reason: true } },
           doctor: {

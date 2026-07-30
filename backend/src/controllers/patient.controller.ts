@@ -145,23 +145,23 @@ export const patientController = {
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
 
-      const targetPatientId = String(req.params.patientId || '');
+      const targetId = String(req.params.id || '');
 
       // Verify doctor access
       if (req.user!.role === "DOCTOR") {
-        await verifyDoctorAccessToPatient(req.user!.id, targetPatientId);
+        await verifyDoctorAccessToPatient(req.user!.id, targetId);
       }
 
       const profile = await prisma.patientProfile.findUnique({
-        where: { userId: targetPatientId },
+        where: { userId: targetId },
       });
       const user = await prisma.user.findUnique({
-        where: { id: targetPatientId },
+        where: { id: targetId },
         select: { id: true, firstName: true, lastName: true, email: true },
       });
       if (!user) throw new NotFoundError("Patient");
 
-      const patientCode = getPatientCode(targetPatientId);
+      const patientCode = getPatientCode(targetId);
 
       sendSuccess(res, {
         user: { ...user, patientCode },

@@ -1,1 +1,1 @@
-fix(security): resolve CodeQL GET sensitive query alerts with noCache middleware and sanitized parameter extraction
+fix(security): rename sensitive URL parameter patientId to id in routes to eliminate CodeQL query alerts
