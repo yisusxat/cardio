@@ -1,4 +1,4 @@
-﻿import { Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { z } from "zod";
 import { AppointmentStatus } from "@prisma/client";
 import { prisma } from "../config/prisma";
@@ -142,6 +142,7 @@ export const patientController = {
   async getPatientSummary(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { patientId } = req.params;
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
       // Verify doctor access
       if (req.user!.role === "DOCTOR") {

@@ -1,4 +1,4 @@
-﻿import { Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { z } from "zod";
 import { prisma } from "../config/prisma";
 import { sendSuccess } from "../utils/api-response";
@@ -63,6 +63,7 @@ export const clinicalNoteController = {
   async getForAppointment(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { id: appointmentId } = req.params;
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
       const note = await prisma.clinicalNote.findUnique({
         where: { appointmentId },
         include: {
@@ -84,6 +85,7 @@ export const clinicalNoteController = {
   async getPatientHistory(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { patientId } = req.params;
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
       // Patients can see their own history. Doctors can see history if authorized.
       if (req.user!.role === "PATIENT" && req.user!.id !== patientId) {
