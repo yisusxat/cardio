@@ -1,1 +1,1 @@
-fix(deps): override @remix-run/router to 1.21.1 to resolve Dependabot alerts #20 #22 #19
+fix(deps): update @remix-run/router to 1.23.2 to resolve Dependabot alert #20
