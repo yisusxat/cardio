@@ -1,1 +1,1 @@
-fix(deps): update brace-expansion to 2.1.2 to resolve Dependabot alert #23 exponential-time DoS
+fix(deps): pin exact react-router-dom to 6.28.2 in frontend/package.json to resolve Dependabot alert #10
