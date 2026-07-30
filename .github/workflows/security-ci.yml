@@ -30,14 +30,14 @@ jobs:
         run: pnpm install
 
       - name: Dependency Security Audit (Backend)
-        run: pnpm run audit:deps -w backend
+        run: pnpm --filter cardiocenter-backend run audit:deps
         continue-on-error: true
 
       - name: Generate Prisma Client
         run: pnpm exec prisma generate --schema=backend/prisma/schema.prisma
 
       - name: Typecheck Backend
-        run: pnpm run build -w backend
+        run: pnpm --filter cardiocenter-backend run build
 
       - name: Typecheck & Build Frontend
-        run: pnpm run build -w frontend
+        run: pnpm --filter cardiocenter-frontend run build
