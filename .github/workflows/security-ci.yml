@@ -1,0 +1,35 @@
+name: DevSecOps & Security Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  security-and-build-check:
+    name: Security Audit & Build Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Workspace Dependencies
+        run: npm ci
+
+      - name: Dependency Security Audit (Backend)
+        run: npm run audit:deps -w backend
+        continue-on-error: true
+
+      - name: Typecheck Backend
+        run: npm run build -w backend
+
+      - name: Typecheck & Build Frontend
+        run: npm run build -w frontend
