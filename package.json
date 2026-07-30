@@ -25,5 +25,13 @@
   "dependencies": {
     "@prisma/client": "^7.9.1",
     "prisma": "^7.9.1"
+  },
+  "overrides": {
+    "vite": "^5.4.19",
+    "react-router": "^6.30.0",
+    "react-router-dom": "^6.30.0",
+    "esbuild": "^0.25.0",
+    "launch-editor": "^3.1.2",
+    "brace-expansion": "^2.0.1"
   }
 }

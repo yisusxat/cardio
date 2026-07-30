@@ -1,1 +1,1 @@
-fix(deps): update vite to 5.4.19, react-router-dom to 6.30.0 and esbuild to 0.25.0 to resolve Dependabot alerts
+fix(deps): add npm overrides in root package.json for transitive dependencies launch-editor, react-router, esbuild, brace-expansion
