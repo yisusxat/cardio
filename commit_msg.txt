@@ -1,1 +1,1 @@
-fix(deps): lock vite to 6.4.3 in package-lock.json to resolve Dependabot alert #7
+fix(deps): pin react-router-dom to ^6.28.2 to avoid vulnerable RSC 7.12.0-8.2.x range in Dependabot alert #13
