@@ -1,1 +1,1 @@
-docs(security): configure project for pnpm package manager with pnpm-lock.yaml and supply chain security documentation
+fix(deps): pin exact versions in pnpm.overrides for brace-expansion (2.0.1) and react-router (6.28.2) in lockfiles
