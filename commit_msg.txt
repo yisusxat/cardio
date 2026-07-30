@@ -1,1 +1,1 @@
-fix(security): resolve CodeQL alerts for rate limiting, Cache-Control headers and workflow permissions
+fix(security): resolve CodeQL GET sensitive query alerts with noCache middleware and sanitized parameter extraction

@@ -141,24 +141,27 @@ export const patientController = {
 
   async getPatientSummary(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { patientId } = req.params;
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+
+      const targetPatientId = String(req.params.patientId || '');
 
       // Verify doctor access
       if (req.user!.role === "DOCTOR") {
-        await verifyDoctorAccessToPatient(req.user!.id, patientId);
+        await verifyDoctorAccessToPatient(req.user!.id, targetPatientId);
       }
 
       const profile = await prisma.patientProfile.findUnique({
-        where: { userId: patientId },
+        where: { userId: targetPatientId },
       });
       const user = await prisma.user.findUnique({
-        where: { id: patientId },
+        where: { id: targetPatientId },
         select: { id: true, firstName: true, lastName: true, email: true },
       });
       if (!user) throw new NotFoundError("Patient");
 
-      const patientCode = getPatientCode(patientId);
+      const patientCode = getPatientCode(targetPatientId);
 
       sendSuccess(res, {
         user: { ...user, patientCode },

@@ -62,10 +62,12 @@ export const clinicalNoteController = {
   /** Get clinical note for a specific appointment */
   async getForAppointment(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id: appointmentId } = req.params;
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      const targetAppointmentId = String(req.params.id || '');
       const note = await prisma.clinicalNote.findUnique({
-        where: { appointmentId },
+        where: { appointmentId: targetAppointmentId },
         include: {
           doctor: {
             select: {
@@ -84,11 +86,13 @@ export const clinicalNoteController = {
   /** Get complete clinical history for a patient */
   async getPatientHistory(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { patientId } = req.params;
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      const targetPatientId = String(req.params.patientId || '');
 
       // Patients can see their own history. Doctors can see history if authorized.
-      if (req.user!.role === "PATIENT" && req.user!.id !== patientId) {
+      if (req.user!.role === "PATIENT" && req.user!.id !== targetPatientId) {
         throw new ForbiddenError();
       }
 
@@ -100,7 +104,7 @@ export const clinicalNoteController = {
         const appointment = await prisma.appointment.findFirst({
           where: {
             doctorId: doctor.id,
-            patientId,
+            patientId: targetPatientId,
             status: { in: ["CONFIRMED", "COMPLETED"] },
           },
         });
@@ -110,7 +114,7 @@ export const clinicalNoteController = {
       }
 
       const notes = await prisma.clinicalNote.findMany({
-        where: { patientId },
+        where: { patientId: targetPatientId },
         include: {
           appointment: { select: { date: true, startTime: true, endTime: true, reason: true } },
           doctor: {
