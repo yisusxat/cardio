@@ -17,7 +17,10 @@ Sistema de gestión de citas médicas para un centro de cardiología. Cada médi
 ### Requisitos
 
 - Node.js ≥ 20.x
-- npm ≥ 10.x
+- pnpm ≥ 9.x (recomendado para seguridad de dependencias) o npm ≥ 10.x
+
+> 🛡️ **Nota de Seguridad de Dependencias (Supply Chain Security):**  
+> Para mitigar riesgos de seguridad de la cadena de suministro (p. ej. ataques de sustitución de paquetes, scripts post-install maliciosos o suplantación en registros), este proyecto está configurado para utilizar **`pnpm`** con verificación de hash (`pnpm-lock.yaml`). Se recomienda usar `pnpm install --frozen-lockfile` en entornos de CI/CD.
 
 ### Pasos
 
@@ -27,23 +30,23 @@ Sistema de gestión de citas médicas para un centro de cardiología. Cada médi
 cp backend/.env.example backend/.env
 ```
 
-2. Instalar dependencias:
+2. Instalar dependencias con `pnpm`:
 
 ```bash
-npm install
+pnpm install
 ```
 
 3. Aplicar migraciones y semillas:
 
 ```bash
-npm run db:migrate -w backend
-npm run db:seed -w backend
+pnpm --filter cardiocenter-backend db:migrate
+pnpm --filter cardiocenter-backend db:seed
 ```
 
 4. Iniciar desarrollo:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 El backend estará en `http://localhost:4000` y el frontend en `http://localhost:5173`.
