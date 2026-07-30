@@ -1,1 +1,1 @@
-fix(deps): add npm overrides in root package.json for transitive dependencies launch-editor, react-router, esbuild, brace-expansion
+fix(deps): update vite to ^6.4.3 in package.json and root overrides to resolve Dependabot security advisory

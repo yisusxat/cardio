@@ -27,7 +27,7 @@
     "prisma": "^7.9.1"
   },
   "overrides": {
-    "vite": "^5.4.19",
+    "vite": "^6.4.3",
     "react-router": "^6.30.0",
     "react-router-dom": "^6.30.0",
     "esbuild": "^0.25.0",
