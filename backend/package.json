@@ -4,6 +4,7 @@
   "description": "Backend API para CardioCenter",
   "main": "dist/app.js",
   "scripts": {
+    "prebuild": "prisma generate",
     "dev": "tsx watch src/server.ts",
     "build": "tsc && esbuild src/server.ts --bundle --platform=node --target=node20 --outfile=dist/server.js",
     "start": "node dist/app.js",

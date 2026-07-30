@@ -127,7 +127,7 @@ export const doctorService = {
 
     const availableSlots = allSlots.filter((slot) => {
       const slotEnd = toTimeString(toMinutes(slot) + slotMinutes);
-      return !existingAppointments.some((appt) =>
+      return !existingAppointments.some((appt: { startTime: string; endTime: string }) =>
         rangesOverlap(slot, slotEnd, appt.startTime, appt.endTime),
       );
     });

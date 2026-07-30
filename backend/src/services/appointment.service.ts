@@ -115,7 +115,7 @@ export const appointmentService = {
     if (!doctor || !doctor.isActive) throw new NotFoundError('Doctor');
 
     // Validate services belong to this doctor
-    const validServices = doctor.services.filter((s) => serviceIds.includes(s.id));
+    const validServices = doctor.services.filter((s: any) => serviceIds.includes(s.id));
     if (serviceIds.length > 0 && validServices.length !== serviceIds.length) {
       throw new ValidationError('One or more selected services are invalid');
     }
@@ -141,11 +141,11 @@ export const appointmentService = {
       where: { doctorId, date: appointmentDate, status: { not: AppointmentStatus.CANCELLED } },
       select: { startTime: true, endTime: true },
     });
-    if (existing.some((a) => rangesOverlap(startTime, endTime, a.startTime, a.endTime))) {
+    if (existing.some((a: any) => rangesOverlap(startTime, endTime, a.startTime, a.endTime))) {
       throw new ValidationError('This time slot is already booked');
     }
 
-    const servicesTotal = validServices.reduce((s, svc) => s + Number(svc.price), 0);
+    const servicesTotal = validServices.reduce((s: number, svc: any) => s + Number(svc.price), 0);
     const totalAmount = servicesTotal || Number(doctor.basePrice);
 
     return prisma.appointment.create({
@@ -159,7 +159,9 @@ export const appointmentService = {
         status: AppointmentStatus.PENDING,
         totalAmount,
         services: {
-          create: validServices.map((s) => ({ serviceId: s.id, priceAtTime: s.price })),
+          createMany: {
+            data: validServices.map((s: any) => ({ serviceId: s.id, priceAtTime: s.price })),
+          },
         },
       },
       include: APPOINTMENT_INCLUDE,
