@@ -1,1 +1,1 @@
-fix(deps): update vite to ^6.4.3 in package.json and root overrides to resolve Dependabot security advisory
+fix(deps): upgrade react-router-dom to ^7.2.0 to resolve Open Redirect vulnerability alert #10
