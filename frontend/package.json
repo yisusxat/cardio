@@ -10,13 +10,14 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives"
   },
   "dependencies": {
+    "@remix-run/router": "^1.23.2",
     "axios": "^1.7.2",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.394.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.2.0",
+    "react-router-dom": "^7.18.2",
     "tailwind-merge": "^2.3.0",
     "zustand": "^4.5.2"
   },

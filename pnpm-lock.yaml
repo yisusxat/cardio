@@ -115,6 +115,9 @@ importers:
 
   frontend:
     dependencies:
+      '@remix-run/router':
+        specifier: 1.23.2
+        version: 1.23.2
       axios:
         specifier: ^1.7.2
         version: 1.18.1
@@ -650,6 +653,10 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@remix-run/router@1.23.2':
+    resolution: {integrity: sha512-Ic6m2U/rMjTkhERIa/0ZtXJP17QUi2CbWE7cqx4J58M8aA3QTfW+2UlQ4psvTX9IO1RfNVhK3pcpdjej7L+t2w==}
+    engines: {node: '>=14.0.0'}
 
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
@@ -3205,6 +3212,8 @@ snapshots:
       react: 18.3.1
     optionalDependencies:
       '@types/react': 18.3.31
+
+  '@remix-run/router@1.23.2': {}
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
