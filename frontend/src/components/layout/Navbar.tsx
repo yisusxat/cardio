@@ -222,6 +222,52 @@ export default function Navbar() {
                 >
                   Dashboard
                 </Link>
+
+                {isDoctor && (
+                  <>
+                    <Link
+                      to="/doctor/profile"
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Mi Perfil
+                    </Link>
+                    <Link
+                      to="/doctor/schedules"
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Mis Horarios
+                    </Link>
+                    <Link
+                      to="/doctor/services"
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Mis Servicios
+                    </Link>
+                  </>
+                )}
+
+                {isPatient && (
+                  <>
+                    <Link
+                      to="/patient/appointments"
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Mis Citas
+                    </Link>
+                    <Link
+                      to="/patient/profile"
+                      className="rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Mi Perfil
+                    </Link>
+                  </>
+                )}
+
                 <button
                   onClick={() => { logout(); setMenuOpen(false); }}
                   className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-primary-600 hover:bg-primary-50 transition-colors"
