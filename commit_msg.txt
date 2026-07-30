@@ -1,1 +1,1 @@
-fix(security): rename sensitive URL parameter patientId to id in routes to eliminate CodeQL query alerts
+fix(deps): update vite to 5.4.19, react-router-dom to 6.30.0 and esbuild to 0.25.0 to resolve Dependabot alerts
