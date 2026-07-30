@@ -5,7 +5,7 @@ import appointmentRoutes from './appointment.routes';
 import paymentRoutes from './payment.routes';
 import patientRoutes from './patient.routes';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

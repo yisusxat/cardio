@@ -3,7 +3,7 @@ import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import { paymentController, createPaymentSchema } from '../controllers/payment.controller';
 
-const router = Router();
+const router: Router = Router();
 
 router.use(authenticate);
 

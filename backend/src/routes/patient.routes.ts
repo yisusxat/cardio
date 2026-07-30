@@ -5,7 +5,7 @@ import { noCache } from "../middlewares/no-cache.middleware";
 import { patientController, patientProfileSchema } from "../controllers/patient.controller";
 import { clinicalNoteController } from "../controllers/clinical-note.controller";
 
-const router = Router();
+const router: Router = Router();
 
 // Patient profile (self)
 router.get("/profile", authenticate, noCache, patientController.getProfile);

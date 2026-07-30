@@ -1,5 +1,5 @@
 import './config/env'; // validate env first
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -8,7 +8,7 @@ import { env } from './config/env';
 import { errorHandler } from './middlewares/error.middleware';
 import apiRouter from './routes';
 
-const app = express();
+const app: Express = express();
 
 // ── Security ──────────────────────────────────────────────────────────────────
 app.use(

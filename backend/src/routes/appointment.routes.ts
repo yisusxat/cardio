@@ -14,7 +14,7 @@ import {
   clinicalNoteSchema,
 } from "../controllers/clinical-note.controller";
 
-const router = Router();
+const router: Router = Router();
 
 // All require authentication
 router.use(authenticate);

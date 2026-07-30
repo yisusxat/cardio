@@ -9,7 +9,7 @@ import {
   registerSchema,
 } from '../controllers/auth.controller';
 
-const router = Router();
+const router: Router = Router();
 
 // Strict rate limiting on authentication endpoints to prevent brute-force attacks
 const authLimiter = rateLimit({

@@ -12,7 +12,7 @@ import {
   availabilityQuerySchema,
 } from '../controllers/doctor.controller';
 
-const router = Router();
+const router: Router = Router();
 
 // ── Public ────────────────────────────────────────────────────────────────────
 router.get('/', doctorController.getAll);
