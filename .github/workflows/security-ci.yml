@@ -27,7 +27,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install Workspace Dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Dependency Security Audit (Backend)
         run: pnpm --filter cardiocenter-backend run audit:deps
